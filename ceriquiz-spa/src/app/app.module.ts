@@ -7,13 +7,15 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NavbarComponent } from './navbar/navbar.component';
 import { NavbarMenuComponent } from './navbar-menu/navbar-menu.component';
 import { NavbarAuthComponent } from './navbar-auth/navbar-auth.component';
+import { NotificationsComponent } from './notifications/notifications.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     NavbarComponent,
     NavbarMenuComponent,
-    NavbarAuthComponent
+    NavbarAuthComponent,
+    NotificationsComponent
   ],
   imports: [
     BrowserModule,

@@ -1,0 +1,5 @@
+<div class="mt-2">
+  <div *ngFor="let notification of notifications; trackBy: trackById">
+    <ngb-alert [type]="notification.type" [dismissible]="notification.dismissible" (closed)="close(notification)">{{ notification.message }}</ngb-alert>
+  </div>
+</div>

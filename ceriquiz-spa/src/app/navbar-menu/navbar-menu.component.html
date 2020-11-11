@@ -1,0 +1,17 @@
+<ul class="navbar-nav mr-auto">
+  <li class="nav-item" *ngIf="!isAuthenticated">
+    <a class="nav-link" href="/login">Se connecter <span class="sr-only">(page active)</span></a>
+  </li>
+  <li class="nav-item" *ngIf="!isAuthenticated">
+    <a class="nav-link" href="https://pedago.univ-avignon.fr/~fredouil/register_jeu.php">Créer un compte</a>
+  </li>
+  <li class="nav-item" *ngIf="isAuthenticated">
+    <a class="nav-link" href="/dashboard">Accueil<span class="sr-only">(page active)</span></a>
+  </li>
+  <li class="nav-item" *ngIf="isAuthenticated">
+    <a class="nav-link" href="/quiz">Les Quizz</a>
+  </li>
+  <li class="nav-item" *ngIf="isAuthenticated">
+    <a class="nav-link" href="/profile">Mon Profil</a>
+  </li>
+</ul>

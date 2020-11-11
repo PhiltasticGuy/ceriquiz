@@ -6,5 +6,6 @@ import { Component } from '@angular/core';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'ceriquiz-spa';
+  public title = 'ceriquiz-spa';
+  public isAuthenticated = false;
 }

@@ -18,7 +18,7 @@ if (configResult.error) {
 
 // Constantes
 const PORT = process.env.PORT_NODE || 3021;
-const STATIC_FILES = '/public';
+const ANGULAR_FILES = '/ceriquiz-spa/dist/ceriquiz-spa/';
 
 const app = express();
 
@@ -40,19 +40,19 @@ app.use(session({
     cookie: { maxAge: 24 * 3600 * 1000 }
 }));
 
-// Gestion des requêtes pour les ressources statiques sous '/public'.
-app.use(STATIC_FILES, express.static(path.join(__dirname, STATIC_FILES)));
+// Gestion des requêtes pour les ressources statiques.
+app.use(express.static(path.join(__dirname, ANGULAR_FILES)));
 
 // Gestion de méthode GET sur '/'.
 app.get('/', function(request, response) {
     // Terminer la requête en retournant la page index.html.
-    response.sendFile(path.join(__dirname, STATIC_FILES, '/index.html'));
+    response.sendFile(path.join(__dirname, ANGULAR_FILES, 'index.html'));
 });
 
 // Gestion de méthode GET sur '/login'.
 app.get('/login', function(request, response) {
     // Terminer la requête en retournant la page index.html.
-    response.sendFile(path.join(__dirname, STATIC_FILES, '/index.html'));
+    response.sendFile(path.join(__dirname, ANGULAR_FILES, 'index.html'));
 });
 
 // Gestion de méthode POST sur '/login'.
@@ -65,7 +65,7 @@ app.post('/login', function(request, response) {
     console.log(JSON.stringify(request.body));
 
     // Instancier un pool de connection à la BD.
-    var pgPool = new pgClient.Pool({ 
+    let pgPool = new pgClient.Pool({ 
         user: process.env.POSTGRESQL_USERNAME, 
         password: process.env.POSTGRESQL_PASSWORD, 
         host: process.env.POSTGRESQL_HOST, 
@@ -74,6 +74,10 @@ app.post('/login', function(request, response) {
     });
     
     // Demander au pool un client connecté à la BD pour notre requête.
+    let data = {
+        firstname: '',
+        lastname: ''
+    };
     pgPool.connect(function(err, client, done) {
         if (err) {
             console.log('Error connecting to PostgreSQL server.' + err.stack);
@@ -94,7 +98,9 @@ app.post('/login', function(request, response) {
                 else if ((res.rows.length > 0) && (res.rows[0].motpasse == hashedPassword)) {
                     // Créer la session pour cet utilisateur valide.
                     request.session.isConnected = true;
-                    request.session.username = username;
+                    request.session = username;
+                    data.firstname = result.rows[0].firstname;
+                    data.lastname = result.rows[0].lastname;
                     console.log(`${request.session.id} expire dans ${request.session.cookie.maxAge}`);
                 }
                 else {

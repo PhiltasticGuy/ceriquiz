@@ -2,10 +2,11 @@
   <span class="navbar-text ml-auto py-0">Bonjour, <span class="font-weight-bold font-italic">Philippe Turcotte</span>!</span>
   <span class="navbar-text ml-auto py-0">Dernière connexion: <span class="font-italic">27/10/2020 11:34</span></span>
 </div>
-<form class="form-inline" action="/login" method="post" *ngIf="isAuthenticated">
+<button class="btn btn-primary" (click)="logout()" *ngIf="isAuthenticated">Se déconnecter</button>
+<!--<form class="form-inline" action="/login" method="post" *ngIf="isAuthenticated">
   <button type="submit" class="btn btn-primary">Se déconnecter</button>
-</form>
-<form class="col-auto" action="/login" method="post" *ngIf="!isAuthenticated">
+</form-->
+<form class="col-auto" #f="ngForm" (ngSubmit)="login(f)" *ngIf="!isAuthenticated">
   <div class="form-row">
     <div class="col-auto my-1">
       <label class="sr-only" for="txtUsername">Identifiant *</label>
@@ -17,7 +18,8 @@
               d="M10 5a2 2 0 1 1-4 0 2 2 0 0 1 4 0zM8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm6 5c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4zm-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10c-2.29 0-3.516.68-4.168 1.332-.678.678-.83 1.418-.832 1.664h10z" />
           </svg>
         </div>
-        <input id="txtUsername" name="txtUsername" placeholder="Identifiant" type="text" class="form-control">
+        <input id="txtUsername" name="txtUsername" placeholder="Identifiant" type="text" class="form-control"
+        #txtUsername="ngModel" [(ngModel)]="loginRequest.username" required minlength="1">
       </div>
     </div>
     <div class="col-auto my-1">
@@ -31,7 +33,8 @@
             <path d="M4 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
           </svg>
         </div>
-        <input id="txtPassword" name="txtPassword" placeholder="Mot de passe" type="password" class="form-control">
+        <input id="txtPassword" name="txtPassword" placeholder="Mot de passe" type="password" class="form-control"
+        #txtPassword="ngModel" [(ngModel)]="loginRequest.password" required minlength="8">
       </div>
     </div>
     <div class="col-auto my-1 align-items-center">

@@ -9,21 +9,9 @@ export class NotificationService {
   public notifications: Notification[] = [
     {
       id: uuidv4(),
-      dismissible: true,
+      dismissible: false,
       type: 'info',
       message: 'Connectez-vous afin de jouer une partie!'
-    },
-    {
-      id: uuidv4(),
-      dismissible: true,
-      type: 'success',
-      message: 'Vous êtes connecté! Allez mesurer votre savoir avec quelques quiz.',
-    },
-    {
-      id: uuidv4(),
-      dismissible: true,
-      type: 'danger',
-      message: 'Une erreur est survenue lors de l\'authentification. Veuillez valider la bonne saisie de vos identifiants.'
     }
   ];
 

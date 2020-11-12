@@ -10,7 +10,7 @@ import LoginResponse from './login-response';
   providedIn: 'root'
 })
 export class AuthenticationService {
-  private authApiUrl = 'http://localhost:3021/auth/login';
+  private authApiUrl = 'http://pedago.univ-avignon.fr:3021/auth/login';
 
   httpOptions = {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })

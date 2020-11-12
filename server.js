@@ -33,8 +33,8 @@ app.use(session({
     saveUninitialized: false,
     resave: false,
     store: new mongoSessions({
-        // uri: "mongodb://127.0.0.1:27017/db",
-        uri: "mongodb://localhost:27017/db",
+        uri: "mongodb://127.0.0.1:27017/db",
+        // uri: "mongodb://localhost:27017/db",
         collection: "mySessions3022",
         touchAfter: 24 * 3600
     }),
@@ -102,11 +102,13 @@ app.post('/auth/login', function(request, response) {
                 else if ((res.rows.length > 0) && (res.rows[0].motpasse == hashedPassword)) {
                     // Créer la session pour cet utilisateur valide.
                     request.session.isConnected = true;
-                    request.session = username;
-                    data.authenticated = true;
-                    data.firstname = res.rows[0].firstname;
-                    data.lastname = res.rows[0].lastname;
-                    console.log(`${request.session.id} expire dans ${request.session.cookie?.maxAge}`);
+                    request.session.username = username;
+                    request.session.save();
+                    // data.authenticated = true;
+                    // data.firstname = res.rows[0].firstname;
+                    // data.lastname = res.rows[0].lastname;
+                    console.log(JSON.stringify(request.session));
+                    console.log(`${request.session.id} expire dans ${request.session.cookie.maxAge}`);
                 }
                 else {
                     console.log('Invalid user credentials.');

@@ -33,7 +33,8 @@ app.use(session({
     saveUninitialized: false,
     resave: false,
     store: new mongoSessions({
-        uri: "mongodb://127.0.0.1:27017/db",
+        // uri: "mongodb://127.0.0.1:27017/db",
+        uri: "mongodb://localhost:27017/db",
         collection: "mySessions3022",
         touchAfter: 24 * 3600
     }),
@@ -56,12 +57,13 @@ app.get('/login', function(request, response) {
 });
 
 // Gestion de méthode POST sur '/login'.
-app.post('/login', function(request, response) {
+app.post('/auth/login', function(request, response) {
     // Extraire l'information de la requête HTTP afin de la traiter.
-    const username = request.body.txtUsername;
-    const password = request.body.txtPassword;
+    const username = request.body.username;
+    const password = request.body.password;
 
     // Afficher le contenu JSON transmis par la requête HTTP dans la console.
+    console.log(JSON.stringify(request.session));
     console.log(JSON.stringify(request.body));
 
     // Instancier un pool de connection à la BD.
@@ -75,6 +77,8 @@ app.post('/login', function(request, response) {
     
     // Demander au pool un client connecté à la BD pour notre requête.
     let data = {
+        authenticated: false,
+        username: username,
         firstname: '',
         lastname: ''
     };
@@ -99,9 +103,10 @@ app.post('/login', function(request, response) {
                     // Créer la session pour cet utilisateur valide.
                     request.session.isConnected = true;
                     request.session = username;
-                    data.firstname = result.rows[0].firstname;
-                    data.lastname = result.rows[0].lastname;
-                    console.log(`${request.session.id} expire dans ${request.session.cookie.maxAge}`);
+                    data.authenticated = true;
+                    data.firstname = res.rows[0].firstname;
+                    data.lastname = res.rows[0].lastname;
+                    console.log(`${request.session.id} expire dans ${request.session.cookie?.maxAge}`);
                 }
                 else {
                     console.log('Invalid user credentials.');
@@ -111,9 +116,8 @@ app.post('/login', function(request, response) {
         }
     });
 
-    // Terminer la requête avec un simple message afficher dans le navigateur 
-    // des clients pour l'instant.
-    response.end('Login processed!');
+    // Terminer la requête en retournant le data.
+    response.send(data);
 });
 
 // Instantiation du serveur Node pour l'écoute sur le port désigné par les 

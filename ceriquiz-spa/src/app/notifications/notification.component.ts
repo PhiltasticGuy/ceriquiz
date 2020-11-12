@@ -10,6 +10,7 @@ import { isNgTemplate } from '@angular/compiler';
   styleUrls: ['./notification.component.scss']
 })
 export class NotificationComponent implements OnInit {
+  readonly maxDisplayCount = 5;
   notifications: Notification[];
 
   constructor(private notificationService: NotificationService) {

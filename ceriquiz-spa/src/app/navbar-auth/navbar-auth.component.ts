@@ -21,32 +21,35 @@ export class NavbarAuthComponent implements OnInit {
 
   login(f: NgForm): void {
     console.log('Form.valid=' + f.valid);
+    console.log('Form.value=' + f.value);
     if (f.valid) {
-      const response = this.authenticationService.login(f.value);
+      const response = this.authenticationService.login(f.value as LoginRequest)
+        .subscribe(res => {
+          if (res.authenticated) {
+            localStorage.setItem(
+              'session',
+              JSON.stringify({
+                username: res.username,
+                firstname: res.firstname,
+                lastname: res.lastname,
+                lastLogin: new Date()
+              })
+            );
 
-      if (response.authenticated) {
-        localStorage.setItem(
-          'session',
-          JSON.stringify({
-            username: response.username,
-            firstname: response.firstname,
-            lastname: response.lastname,
-            lastLogin: new Date()
-          }));
-
-        this.notificationService.add({
-          dismissible: true,
-          type: 'success',
-          message: 'Vous êtes connecté! Allez mesurer votre savoir avec quelques quiz.'
+            this.notificationService.add({
+              dismissible: true,
+              type: 'success',
+              message: 'Vous êtes connecté! Allez mesurer votre savoir avec quelques quiz.'
+            });
+          }
+          else {
+            this.notificationService.add({
+              dismissible: true,
+              type: 'danger',
+              message: 'Une erreur est survenue lors de l\'authentification. Veuillez vous assurer de l\'exactitude des identifiants saisis.'
+            });
+          }
         });
-      }
-      else {
-        this.notificationService.add({
-          dismissible: true,
-          type: 'danger',
-          message: 'Une erreur est survenue lors de l\'authentification. Veuillez vous assurer de l\'exactitude des identifiants saisis.'
-        });
-      }
     }
   }
 

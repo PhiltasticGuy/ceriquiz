@@ -91,6 +91,17 @@ export class AuthenticationService {
         'Vous êtes connecté! Allez mesurer votre savoir avec quelques quiz.'
       );
 
+      // Conserver la date de la dernière connexion réussie.
+      const data = JSON.parse(localStorage.getItem('session'));
+      if (data?.newLoginDate && data?.username === reponse.username) {
+        // Si ce n'est pas la première connexion d'un utilisateur à partir de
+        // cette machine et que c'est le même utilisateur qui se reconnecte...
+        localStorage.setItem('lastLoginDate', data?.newLoginDate);
+      }
+      else {
+        localStorage.removeItem('lastLoginDate');
+      }
+
       // Sauvegarder l'information de l'utilisateur dans la session sur
       // localStorage.
       localStorage.setItem(

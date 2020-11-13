@@ -108,7 +108,7 @@ app.post('/auth/login', function(request, response) {
                       username: username,
                       firstname: res.rows[0].prenom,
                       lastname: res.rows[0].nom,
-                      lastLoginDate: new Date()
+                      newLoginDate: new Date()
                     };
                     request.session.user = data;
 

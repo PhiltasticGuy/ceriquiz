@@ -24,8 +24,11 @@ export class NavbarUserAreaComponent implements OnInit {
       // du localStorage.
       if (this.isAuthenticated) {
         const data = JSON.parse(localStorage.getItem('session'));
+        const lastLoginDate = new Date(localStorage.getItem('lastLoginDate'));
+
         this.displayName = `${data.firstname} ${data.lastname}`;
-        this.lastLoginDate = new Date(data.lastLoginDate).toLocaleString('fr', { timeZone: 'CET' });
+        this.lastLoginDate =
+          (localStorage.getItem('lastLoginDate') ? lastLoginDate?.toLocaleString('fr', { timeZone: 'CET' }) : 'N/A');
       }
     });
   }

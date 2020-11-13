@@ -8,7 +8,7 @@ import { AppComponent } from './app.component';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NavbarComponent } from './navbar/navbar.component';
 import { NavbarMenuComponent } from './navbar-menu/navbar-menu.component';
-import { NavbarAuthComponent } from './navbar-auth/navbar-auth.component';
+import { NavbarUserAreaComponent } from './navbar-user-area/navbar-user-area.component';
 import { NotificationComponent } from './notifications/notification.component';
 import { FormLoginComponent } from './form-login/form-login.component';
 
@@ -17,9 +17,9 @@ import { FormLoginComponent } from './form-login/form-login.component';
     AppComponent,
     NavbarComponent,
     NavbarMenuComponent,
-    NavbarAuthComponent,
     NotificationComponent,
-    FormLoginComponent
+    FormLoginComponent,
+    NavbarUserAreaComponent
   ],
   imports: [
     BrowserModule,

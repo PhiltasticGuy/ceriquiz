@@ -14,7 +14,8 @@ export class NavbarMenuComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.authenticationService.getAuthenticated().subscribe((value) => {
+    // S'enregistrer aux updates de l'état de l'authentification.
+    this.authenticationService.getAuthenticated().subscribe(value => {
       this.isAuthenticated = value;
     });
   }

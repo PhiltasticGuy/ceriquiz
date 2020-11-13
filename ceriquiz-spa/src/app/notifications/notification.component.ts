@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 
 import { Notification } from './notification';
 import { NotificationService } from './notification.service';
-import { isNgTemplate } from '@angular/compiler';
 
 @Component({
   selector: 'app-notification',
@@ -10,18 +9,16 @@ import { isNgTemplate } from '@angular/compiler';
   styleUrls: ['./notification.component.scss']
 })
 export class NotificationComponent implements OnInit {
-  readonly maxDisplayCount = 5;
-  notifications: Notification[];
+  public notifications: Notification[];
+
+  // On n'affiche que les 5 premières notifications (donc les plus anciennes).
+  public readonly maxDisplayCount = 5;
 
   constructor(private notificationService: NotificationService) {
   }
 
   ngOnInit(): void {
-    this.getNotifications();
-  }
-
-  getNotifications(): void {
-    // this.notifications = this.notificationService.getNotifications();
+    // S'enregistrer aux updates de la liste de notifications.
     this.notificationService.getNotifications().subscribe(notifications => {
       this.notifications = notifications;
     });

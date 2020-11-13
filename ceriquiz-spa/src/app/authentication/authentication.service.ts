@@ -1,28 +1,29 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of, BehaviorSubject, Subject, Subscriber } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { Observable, of, BehaviorSubject } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
 
 import LoginRequest from './login-request';
 import LoginResponse from './login-response';
 import { NotificationService } from '../notifications/notification.service';
-import { ERROR_COMPONENT_TYPE } from '@angular/compiler';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
   private authApiUrl = 'http://127.0.0.1:3021/auth/login';
-
   private authenticated: BehaviorSubject<boolean>;
 
-  httpOptions = {
+  // Options pour les HTTP Headers utilisées lors des requêtes HTTP.
+  private readonly httpOptions = {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })
   };
 
   constructor(private httpClient: HttpClient, private notificationService: NotificationService) {
     this.authenticated = new BehaviorSubject<boolean>(false);
 
+    // Lorsque l'application est lancée initialement, l'utilisateur n'est pas
+    // connecté. On affiche alors un message l'invitant à se connecter.
     this.notificationService.add(
       false,
       'info',
@@ -31,7 +32,6 @@ export class AuthenticationService {
   }
 
   getAuthenticated(): Observable<boolean> {
-    console.log(this.authenticated.value);
     return this.authenticated.asObservable();
   }
 
@@ -39,44 +39,67 @@ export class AuthenticationService {
     this.authenticated.next(value);
   }
 
+  /**
+   * Connecter un utilisateur et ouverture de sa session.
+   *
+   * @param request: Identifiants de l'utilisateur.
+   */
   login(request: LoginRequest): Observable<boolean> {
     this.httpClient
       .post<LoginResponse>(this.authApiUrl, request, this.httpOptions)
       .pipe(
-        tap(_ => console.log(`Processed login request.`)),
-        // map(_ => _.authenticated),
+        tap(_ => console.log(`Processing login request for \'${request.username}\'.`)),
         catchError(this.handleError('login', { } as LoginResponse))
       )
+      // Lorsqu'on reçoit une réponse, la traitée avec this.processLogin().
       .subscribe((value: LoginResponse) => this.processLogin(value));
 
+    // L'observable de la valeur d'authentification est retournée afin que
+    // l'on puisse recevoir ses nouvelles valeurs une fois que l'appel HTTP
+    // est traité par this.processLogin().
     return this.getAuthenticated();
   }
 
+  /**
+   * Déconnecter l'utilisateur et fermer sa session.
+   */
   logout(): void {
+    // Avertir l'utilisateur à l'aide de notifications appropriées.
     this.notificationService.clear();
     this.notificationService.add(
       false,
       'info',
       'Connectez-vous afin de jouer une partie!'
     );
+
+    // Avertir les subscribers que l'utilisateur n'est plus connecté.
     this.setAuthenticated(false);
   }
 
+  /**
+   * Traitement interne d'une réponse à la requête HTTP du login.
+   *
+   * @param response Réponse à la requête HTTP du login.
+   */
   private processLogin(reponse: LoginResponse): void {
     if (reponse.authenticated) {
-      localStorage.setItem(
-        'session',
-        JSON.stringify(reponse)
-      );
-
+      // Afficher un message de réussite!
       this.notificationService.clear();
       this.notificationService.add(
         true,
         'success',
         'Vous êtes connecté! Allez mesurer votre savoir avec quelques quiz.'
       );
+
+      // Sauvegarder l'information de l'utilisateur dans la session sur
+      // localStorage.
+      localStorage.setItem(
+        'session',
+        JSON.stringify(reponse)
+      );
     }
     else {
+      // Afficher un message d'échec...
       this.notificationService.add(
         true,
         'danger',
@@ -84,25 +107,28 @@ export class AuthenticationService {
       );
     }
 
+    // Avertir les subscribers que l'état de l'authentification est modifié.
     this.setAuthenticated(reponse.authenticated);
   }
 
   /**
-   * Handle Http operation that failed.
-   * Let the app continue.
-   * @param operation - name of the operation that failed
-   * @param result - optional value to return as the observable result
+   * Assurer une bonne gestion d'une erreur survenue lors d'une requête HTTP.
+   *
+   * Idée empruntée de la partie 6 du tutoriel d'Angular:
+   * https://angular.io/tutorial/toh-pt6#handleerror
+   *
+   * @param operation - Nom de l'opération à l'origine de l'erreur.
+   * @param result - Valeur optionelle retournée en tant qu'Observable<T>.
    */
   private handleError<T>(operation = 'operation', result?: T): any {
     return (error: any): Observable<T> => {
-
-      // TODO: send the error to remote logging infrastructure
+      // Stocker cette erreur dans notre infrastructure de logging.
+      // TODO: Trouver une meilleur infrastructure de logging que la console du client...
       console.error(error); // log to console instead
 
-      // TODO: better job of transforming error for user consumption
-      // this.log(`${operation} failed: ${error.message}`);
-
-      // Let the app keep running by returning an empty result.
+      // L'observable permet à l'application de continuer d'exécuter tandis que
+      // les subscribers receveront éventuellement la réponse du traitement de
+      // cette erreur.
       return of(result as T);
     };
   }

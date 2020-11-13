@@ -113,14 +113,14 @@ app.post('/auth/login', function(request, response) {
                     request.session.user = data;
 
                     console.log(`${request.session.id} expire dans ${request.session.cookie.maxAge}`);
+                
+                    // Terminer la requête en retournant le data.
+                    response.send(request.session.user);
                 }
                 else {
                     console.log('Invalid user credentials.');
                     response.sendStatus(401);
                 }
-                
-                // Terminer la requête en retournant le data.
-                response.send(request.session.user);
             });
             client.release();
         }

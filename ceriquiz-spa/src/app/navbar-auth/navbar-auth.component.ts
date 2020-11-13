@@ -12,48 +12,37 @@ import { NotificationService } from '../notifications/notification.service';
 })
 export class NavbarAuthComponent implements OnInit {
   public isAuthenticated = false;
+  public displayName = '';
+  public lastLoginDate = '';
   public loginRequest: LoginRequest = { username: '', password: '' };
 
-  constructor(private authenticationService: AuthenticationService, private notificationService: NotificationService) { }
+  constructor(private authenticationService: AuthenticationService, private notificationService: NotificationService) {
+
+  }
 
   ngOnInit(): void {
+    this.authenticationService.getAuthenticated().subscribe((value) => {
+      this.isAuthenticated = value;
+
+      if (this.isAuthenticated) {
+        const data = JSON.parse(localStorage.getItem('session'));
+        this.displayName = `${data.firstname} ${data.lastname}`;
+        this.lastLoginDate = (data.lastLoginDate as Date).toLocaleString();
+      }
+    });
   }
 
   login(f: NgForm): void {
     console.log('Form.valid=' + f.valid);
     console.log('Form.value=' + f.value);
     if (f.valid) {
-      const response = this.authenticationService.login(f.value as LoginRequest)
-        .subscribe(res => {
-          if (res.authenticated) {
-            localStorage.setItem(
-              'session',
-              JSON.stringify({
-                username: res.username,
-                firstname: res.firstname,
-                lastname: res.lastname,
-                lastLogin: new Date()
-              })
-            );
-
-            this.notificationService.add({
-              dismissible: true,
-              type: 'success',
-              message: 'Vous êtes connecté! Allez mesurer votre savoir avec quelques quiz.'
-            });
-          }
-          else {
-            this.notificationService.add({
-              dismissible: true,
-              type: 'danger',
-              message: 'Une erreur est survenue lors de l\'authentification. Veuillez vous assurer de l\'exactitude des identifiants saisis.'
-            });
-          }
-        });
+      this.authenticationService.login(f.value as LoginRequest);
     }
   }
 
   logout(): void {
+    this.loginRequest = { username: '', password: '' };
+    this.authenticationService.logout();
   }
 
 }

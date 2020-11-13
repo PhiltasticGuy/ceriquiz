@@ -3,4 +3,5 @@ export default interface LoginResponse {
   username: string;
   firstname: string;
   lastname: string;
+  lastLoginDate: Date;
 }

@@ -1,6 +1,6 @@
 <div class="navbar-collapse flex-column px-lg-2" *ngIf="isAuthenticated">
-  <span class="navbar-text ml-auto py-0">Bonjour, <span class="font-weight-bold font-italic">Philippe Turcotte</span>!</span>
-  <span class="navbar-text ml-auto py-0">Dernière connexion: <span class="font-italic">27/10/2020 11:34</span></span>
+  <span class="navbar-text ml-auto py-0">Bonjour, <span class="font-weight-bold font-italic">{{displayName}}</span>!</span>
+  <span class="navbar-text ml-auto py-0">Dernière connexion: <span class="font-italic">{{lastLoginDate}}</span></span>
 </div>
 <button class="btn btn-primary" (click)="logout()" *ngIf="isAuthenticated">Se déconnecter</button>
 <!--<form class="form-inline" action="/login" method="post" *ngIf="isAuthenticated">

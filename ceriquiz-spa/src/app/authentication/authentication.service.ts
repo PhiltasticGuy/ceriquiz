@@ -22,6 +22,12 @@ export class AuthenticationService {
 
   constructor(private httpClient: HttpClient, private notificationService: NotificationService) {
     this.authenticated = new BehaviorSubject<boolean>(false);
+
+    this.notificationService.add(
+      false,
+      'info',
+      'Connectez-vous afin de jouer une partie!'
+    );
   }
 
   getAuthenticated(): Observable<boolean> {
@@ -38,36 +44,47 @@ export class AuthenticationService {
       .post<LoginResponse>(this.authApiUrl, request, this.httpOptions)
       .pipe(
         tap(_ => console.log(`Processed login request.`)),
-        tap(result => {
-            if (result.authenticated) {
-              localStorage.setItem(
-                'session',
-                JSON.stringify(result)
-              );
-              this.notificationService.add({
-                dismissible: true,
-                type: 'success',
-                message: 'Vous êtes connecté! Allez mesurer votre savoir avec quelques quiz.'
-              });
-            }
-            else {
-              this.notificationService.add({
-                dismissible: true,
-                type: 'danger',
-                message: 'Une erreur est survenue lors de l\'authentification. Veuillez vous assurer de l\'exactitude des identifiants saisis.'
-              });
-            }
-        }),
-        map(_ => _.authenticated),
-        catchError(this.handleError<boolean>('login', false))
+        // map(_ => _.authenticated),
+        catchError(this.handleError('login', { } as LoginResponse))
       )
-      .subscribe(value => this.setAuthenticated(value));
+      .subscribe((value: LoginResponse) => this.processLogin(value));
 
     return this.getAuthenticated();
   }
 
   logout(): void {
+    this.notificationService.clear();
+    this.notificationService.add(
+      false,
+      'info',
+      'Connectez-vous afin de jouer une partie!'
+    );
     this.setAuthenticated(false);
+  }
+
+  private processLogin(reponse: LoginResponse): void {
+    if (reponse.authenticated) {
+      localStorage.setItem(
+        'session',
+        JSON.stringify(reponse)
+      );
+
+      this.notificationService.clear();
+      this.notificationService.add(
+        true,
+        'success',
+        'Vous êtes connecté! Allez mesurer votre savoir avec quelques quiz.'
+      );
+    }
+    else {
+      this.notificationService.add(
+        true,
+        'danger',
+        'Une erreur est survenue lors de l\'authentification. Veuillez vous assurer de l\'exactitude des identifiants saisis.'
+      );
+    }
+
+    this.setAuthenticated(reponse.authenticated);
   }
 
   /**

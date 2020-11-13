@@ -5,5 +5,5 @@
         <span class="navbar-toggler-icon"></span>
     </button>
     <app-navbar-menu class="collapse navbar-collapse" id="navbarSupportedContent"></app-navbar-menu>
-    <app-navbar-auth class="d-flex align-items-center"></app-navbar-auth>
+    <button class="btn btn-primary" (click)="logout()" *ngIf="isAuthenticated">Se déconnecter</button>
 </nav>

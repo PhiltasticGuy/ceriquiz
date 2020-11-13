@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 
-import Notification from './notification';
+import { Notification } from './notification';
 import { NotificationService } from './notification.service';
 import { isNgTemplate } from '@angular/compiler';
 
@@ -21,7 +21,10 @@ export class NotificationComponent implements OnInit {
   }
 
   getNotifications(): void {
-    this.notifications = this.notificationService.notifications;
+    // this.notifications = this.notificationService.getNotifications();
+    this.notificationService.getNotifications().subscribe(notifications => {
+      this.notifications = notifications;
+    });
   }
 
   trackById(index: number, item: Notification): string {

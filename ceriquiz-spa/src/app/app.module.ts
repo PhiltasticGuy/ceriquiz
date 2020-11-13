@@ -10,6 +10,7 @@ import { NavbarComponent } from './navbar/navbar.component';
 import { NavbarMenuComponent } from './navbar-menu/navbar-menu.component';
 import { NavbarAuthComponent } from './navbar-auth/navbar-auth.component';
 import { NotificationComponent } from './notifications/notification.component';
+import { FormLoginComponent } from './form-login/form-login.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { NotificationComponent } from './notifications/notification.component';
     NavbarComponent,
     NavbarMenuComponent,
     NavbarAuthComponent,
-    NotificationComponent
+    NotificationComponent,
+    FormLoginComponent
   ],
   imports: [
     BrowserModule,

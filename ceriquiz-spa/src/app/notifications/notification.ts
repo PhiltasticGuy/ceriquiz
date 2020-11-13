@@ -1,6 +1,8 @@
-export default interface Notification {
+export interface Notification {
   id?: string;
-  dismissible: boolean;
-  type: 'info' | 'warning' | 'success' | 'danger';
+  dismissible?: boolean;
+  type: NotificationType;
   message: string;
 }
+
+export type NotificationType = 'info' | 'warning' | 'success' | 'danger';

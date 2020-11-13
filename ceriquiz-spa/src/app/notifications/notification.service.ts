@@ -1,33 +1,40 @@
 import { Injectable } from '@angular/core';
-import Notification from './notification';
+import { Notification, NotificationType } from './notification';
 import { v4 as uuidv4 } from 'uuid';
+import { Observable, BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
-  public notifications: Notification[] = [
-    {
-      id: uuidv4(),
-      dismissible: false,
-      type: 'info',
-      message: 'Connectez-vous afin de jouer une partie!'
-    }
-  ];
+  private notifications: BehaviorSubject<Notification[]>;
 
   constructor() {
+    this.notifications = new BehaviorSubject<Notification[]>([]);
   }
 
-  add(notification: Notification): void {
-    notification.id = uuidv4();
-    this.notifications.push(notification);
+  getNotifications(): Observable<Notification[]> {
+    return this.notifications.asObservable();
+  }
+
+  add(d: boolean, t: NotificationType, m: string): void {
+    const notification: Notification = {
+      id: uuidv4(),
+      dismissible: d,
+      type: t,
+      message: m
+    };
+
+    this.notifications.value.push(notification);
+    this.notifications.next(this.notifications.value);
   }
 
   remove(notification: Notification): void {
-    this.notifications.splice(this.notifications.indexOf(notification), 1);
+    this.notifications.value.splice(this.notifications.value.indexOf(notification), 1);
+    this.notifications.next(this.notifications.value);
   }
 
   clear(): void {
-    this.notifications = [];
+    this.notifications.next([]);
   }
 }

@@ -1,9 +1,29 @@
 <nav class="navbar navbar-expand-lg navbar-light bg-light justify-content-between">
     <a class="navbar-brand" href="/">CERIGame</a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Voir le menu">
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Voir le menu" (click)="isMenuCollapsed = !isMenuCollapsed">
         <span class="navbar-toggler-icon"></span>
     </button>
-    <app-navbar-menu class="collapse navbar-collapse" id="navbarSupportedContent"></app-navbar-menu>
-    <app-navbar-user-area class="d-flex align-items-center"></app-navbar-user-area>
+    <div [ngbCollapse]="isMenuCollapsed" class="collapse navbar-collapse">
+      <ul class="navbar-nav mr-auto">
+        <li class="nav-item" *ngIf="!isAuthenticated">
+          <a class="nav-link" href="/login" (click)="isMenuCollapsed = true">Se connecter <span class="sr-only">(page active)</span></a>
+        </li>
+        <li class="nav-item" *ngIf="!isAuthenticated">
+          <a class="nav-link" href="https://pedago.univ-avignon.fr/~fredouil/register_jeu.php" (click)="isMenuCollapsed = true">Créer un compte</a>
+        </li>
+        <li class="nav-item" *ngIf="isAuthenticated">
+          <a class="nav-link" href="/dashboard" (click)="isMenuCollapsed = true">Accueil<span class="sr-only">(page active)</span></a>
+        </li>
+        <li class="nav-item" *ngIf="isAuthenticated">
+          <a class="nav-link" href="/quiz" (click)="isMenuCollapsed = true">Les Quizz</a>
+        </li>
+        <li class="nav-item" *ngIf="isAuthenticated">
+          <a class="nav-link" href="/profile" (click)="isMenuCollapsed = true">Mon Profil</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- <app-navbar-menu id="navbarSupportedContent12"></app-navbar-menu> -->
+    <app-navbar-user-area [ngbCollapse]="isMenuCollapsed" class="d-flex align-items-center collapse navbar-collapse"></app-navbar-user-area>
 </nav>

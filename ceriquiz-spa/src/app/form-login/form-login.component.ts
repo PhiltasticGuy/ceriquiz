@@ -3,6 +3,7 @@ import {NgForm} from '@angular/forms';
 
 import LoginRequest from '../authentication/login-request';
 import { AuthenticationService } from '../authentication/authentication.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-form-login',
@@ -13,7 +14,7 @@ export class FormLoginComponent implements OnInit {
   public isAuthenticated = false;
   public loginRequest: LoginRequest = { username: '', password: '' };
 
-  constructor(private authenticationService: AuthenticationService) {
+  constructor(private authenticationService: AuthenticationService, private router: Router) {
   }
 
   ngOnInit(): void {
@@ -30,6 +31,7 @@ export class FormLoginComponent implements OnInit {
         // reconnexion suite à une déconnexion.
         if (value) {
           f.reset();
+          this.router.navigate(['login']);
         }
       });
     }

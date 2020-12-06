@@ -21,15 +21,20 @@ export class AuthenticationService {
   };
 
   constructor(private httpClient: HttpClient, private notificationService: NotificationService) {
-    this.authenticated = new BehaviorSubject<boolean>(false);
+    const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
+    const isAuthenticated = data?.authenticated;
+
+    this.authenticated = new BehaviorSubject<boolean>(isAuthenticated);
 
     // Lorsque l'application est lancée initialement, l'utilisateur n'est pas
     // connecté. On affiche alors un message l'invitant à se connecter.
-    this.notificationService.add(
-      false,
-      'info',
-      'Connectez-vous afin de jouer une partie!'
-    );
+    if (!isAuthenticated) {
+      this.notificationService.add(
+        false,
+        'info',
+        'Connectez-vous afin de jouer une partie!'
+      );
+    }
   }
 
   getAuthenticated(): Observable<boolean> {
@@ -65,6 +70,13 @@ export class AuthenticationService {
    * Déconnecter l'utilisateur et fermer sa session.
    */
   logout(): void {
+    // Fermer la session dans le localStorage.
+    const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
+    data.authenticated = false;
+    localStorage.setItem('session', JSON.stringify(data));
+
+    // TODO: Flip the online flag in the PostgreSQL database.
+
     // Avertir l'utilisateur à l'aide de notifications appropriées.
     this.notificationService.clear();
     this.notificationService.add(

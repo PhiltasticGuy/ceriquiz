@@ -57,12 +57,6 @@ app.get('/', function(request, response) {
     response.sendFile(path.join(__dirname, ANGULAR_FILES, 'index.html'));
 });
 
-// Gestion de méthode GET sur '/login'.
-app.get('/login', function(request, response) {
-    // Terminer la requête en retournant la page index.html.
-    response.sendFile(path.join(__dirname, ANGULAR_FILES, 'index.html'));
-});
-
 // Gestion de méthode POST sur '/login'.
 app.post('/auth/login', function(request, response) {
     // Extraire l'information de la requête HTTP afin de la traiter.
@@ -112,6 +106,8 @@ app.post('/auth/login', function(request, response) {
                     };
                     request.session.user = data;
 
+                    // TODO: Flip the online flag in the PostgreSQL database.
+
                     console.log(`${request.session.id} expire dans ${request.session.cookie.maxAge}`);
                 
                     // Terminer la requête en retournant le data.
@@ -125,6 +121,11 @@ app.post('/auth/login', function(request, response) {
             client.release();
         }
     });
+});
+
+app.get('/*', function(request, response) {
+  console.log('HELLO!');
+  response.sendFile(path.join(__dirname, ANGULAR_FILES, 'index.html'));
 });
 
 // Instantiation du serveur Node pour l'écoute sur le port désigné par les 

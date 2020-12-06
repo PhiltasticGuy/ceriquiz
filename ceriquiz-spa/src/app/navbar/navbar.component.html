@@ -7,23 +7,23 @@
     <div [ngbCollapse]="isMenuCollapsed" class="collapse navbar-collapse">
       <ul class="navbar-nav mr-auto">
         <li class="nav-item" *ngIf="!isAuthenticated">
-          <a class="nav-link" href="/login" (click)="isMenuCollapsed = true">Se connecter <span class="sr-only">(page active)</span></a>
+          <a class="nav-link" routerLink="/login" (click)="isMenuCollapsed = true">Se connecter <span class="sr-only">(page active)</span></a>
         </li>
         <li class="nav-item" *ngIf="!isAuthenticated">
           <a class="nav-link" href="https://pedago.univ-avignon.fr/~fredouil/register_jeu.php" (click)="isMenuCollapsed = true">Créer un compte</a>
         </li>
         <li class="nav-item" *ngIf="isAuthenticated">
-          <a class="nav-link" href="/dashboard" (click)="isMenuCollapsed = true">Accueil<span class="sr-only">(page active)</span></a>
+          <a class="nav-link" routerLink="/dashboard" (click)="isMenuCollapsed = true">Accueil<span class="sr-only">(page active)</span></a>
         </li>
         <li class="nav-item" *ngIf="isAuthenticated">
-          <a class="nav-link" href="/quiz" (click)="isMenuCollapsed = true">Les Quizz</a>
+          <a class="nav-link" routerLink="/quiz" (click)="isMenuCollapsed = true">Les Quizz</a>
         </li>
         <li class="nav-item" *ngIf="isAuthenticated">
-          <a class="nav-link" href="/profile" (click)="isMenuCollapsed = true">Mon Profil</a>
+          <a class="nav-link" routerLink="/profile" (click)="isMenuCollapsed = true">Mon Profil</a>
         </li>
       </ul>
     </div>
 
     <!-- <app-navbar-menu id="navbarSupportedContent12"></app-navbar-menu> -->
-    <app-navbar-user-area [ngbCollapse]="isMenuCollapsed" class="d-flex align-items-center collapse navbar-collapse"></app-navbar-user-area>
+    <app-navbar-user-area [ngbCollapse]="isMenuCollapsed" class="collapse navbar-collapse"></app-navbar-user-area>
 </nav>

@@ -11,6 +11,8 @@ import { NavbarMenuComponent } from './navbar-menu/navbar-menu.component';
 import { NavbarUserAreaComponent } from './navbar-user-area/navbar-user-area.component';
 import { NotificationComponent } from './notifications/notification.component';
 import { FormLoginComponent } from './form-login/form-login.component';
+import { DashboardComponent } from './dashboard/dashboard.component';
+import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 
 @NgModule({
   declarations: [
@@ -19,7 +21,9 @@ import { FormLoginComponent } from './form-login/form-login.component';
     NavbarMenuComponent,
     NotificationComponent,
     FormLoginComponent,
-    NavbarUserAreaComponent
+    NavbarUserAreaComponent,
+    DashboardComponent,
+    PageNotFoundComponent
   ],
   imports: [
     BrowserModule,

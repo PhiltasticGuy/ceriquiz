@@ -57,4 +57,14 @@ export class ProfileComponent implements OnInit {
     }
   }
 
+  public cancel(): void {
+    // Basculer en mode affichage seulement.
+    this.isEditing = false;
+
+    this.profileService.getProfile(this.profile.username).subscribe(value => {
+      this.profile = value;
+      this.tempAvatarUrl = this.profile.avatarUrl;
+    });
+  }
+
 }

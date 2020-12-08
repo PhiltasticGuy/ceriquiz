@@ -53,7 +53,7 @@
           </div>
     
           <div class="clearfix text-center">
-            <input type="submit" class="btn btn-primary" value="Se connecter">
+            <input type="submit" class="btn btn-primary" [disabled]="!f.valid" value="Se connecter">
           </div>
         </form>
       </div>

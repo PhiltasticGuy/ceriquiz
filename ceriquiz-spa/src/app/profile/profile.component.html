@@ -2,9 +2,14 @@
   <h1>Profil - {{ profile.username }}</h1>
 
   <div class="row justify-content-center mb-3">
-    <img src="{{ profile.avatarUrl }}" class="rounded-circle" width="200" height="200"
+    <!-- <img src="{{ (profile.avatarUrl === 'assets/question-mark.jpg' ? profile.avatarUrl : temp) }}" class="rounded-circle" width="200" height="200"
+        (error)="profile.avatarUrl = 'assets/question-mark.jpg'"
         alt="Photo de profil pour {{ profile.firstname + ' ' + profile.lastname }}."
-        title="Photo de profil pour {{ profile.firstname + ' ' + profile.lastname }}.">
+        title="Photo de profil pour {{ profile.firstname + ' ' + profile.lastname }}."> -->
+      <img src="{{ profile.avatarUrl }}" class="rounded-circle" width="200" height="200"
+      (error)="profile.avatarUrl = 'assets/question-mark.jpg'"
+      alt="Photo de profil pour {{ profile.firstname + ' ' + profile.lastname }}."
+      title="Photo de profil pour {{ profile.firstname + ' ' + profile.lastname }}.">
   </div>
 
   <div *ngIf="!isEditing">
@@ -29,13 +34,13 @@
     </div>
   </div>
   
-  <div *ngIf="!isEditing">
+  <div *ngIf="isEditing">
     <form #f="ngForm" (ngSubmit)="saveProfile(f)">
       <div class="form-group row">
         <label for="txtAvatarUrl" class="col-sm-2 col-form-label">Avatar URL</label>
         <div class="col-sm-10">
           <input type="text" class="form-control" id="txtAvatarUrl" name="txtAvatarUrl" placeholder="Avatar URL"
-          #avatarUrl="ngModel" [(ngModel)]="profile.avatarUrl" required maxlength="100">
+          #avatarUrl="ngModel" [(ngModel)]="tempAvatarUrl" required maxlength="100">
         </div>
       </div>
       <div *ngIf="avatarUrl.invalid && (avatarUrl.dirty || avatarUrl.touched)" class="alert alert-danger">

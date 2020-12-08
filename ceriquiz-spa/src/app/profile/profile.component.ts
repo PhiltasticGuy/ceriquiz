@@ -11,13 +11,17 @@ import { NgForm } from '@angular/forms';
 })
 export class ProfileComponent implements OnInit {
   public isEditing = false;
+  public tempAvatarUrl = '';
   public profile: Profile;
 
   constructor(private profileService: ProfileService) { }
 
   ngOnInit(): void {
     const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
-    this.profileService.getProfile(data.username).subscribe(value => this.profile = value);
+    this.profileService.getProfile(data.username).subscribe(value => {
+      this.profile = value;
+      this.tempAvatarUrl = this.profile.avatarUrl;
+    });
   }
 
   public formatDate(value: Date): string {
@@ -34,6 +38,7 @@ export class ProfileComponent implements OnInit {
 
   public saveProfile(f: NgForm): void {
     this.isEditing = false;
+    this.profile.avatarUrl = this.tempAvatarUrl;
   }
 
 }

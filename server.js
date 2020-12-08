@@ -50,6 +50,15 @@ app.use(
   })
 );
 
+// Pool de connection à la base de donnée PostgreSQL.
+const pgPool = new pgClient.Pool({
+  user: process.env.POSTGRESQL_USERNAME,
+  password: process.env.POSTGRESQL_PASSWORD,
+  host: process.env.POSTGRESQL_HOST,
+  port: process.env.POSTGRESQL_PORT,
+  database: process.env.POSTGRESQL_DATABASE
+});
+
 // Gestion des requêtes pour les ressources statiques.
 app.use(express.static(path.join(__dirname, ANGULAR_FILES)));
 
@@ -67,15 +76,6 @@ app.post("/auth/login", function (request, response) {
 
   // Afficher le contenu JSON transmis par la requête HTTP dans la console.
   console.log(JSON.stringify(request.body));
-
-  // Instancier un pool de connection à la BD.
-  let pgPool = new pgClient.Pool({
-    user: process.env.POSTGRESQL_USERNAME,
-    password: process.env.POSTGRESQL_PASSWORD,
-    host: process.env.POSTGRESQL_HOST,
-    port: process.env.POSTGRESQL_PORT,
-    database: process.env.POSTGRESQL_DATABASE
-  });
 
   // Demander au pool un client connecté à la BD pour notre requête.
   pgPool.connect(function (err, client, done) {
@@ -133,15 +133,6 @@ app.get("/profile/:username", function (request, response) {
   // Extraire l'information de la requête HTTP afin de la traiter.
   const username = request.params.username;
 
-  // Instancier un pool de connection à la BD.
-  let pgPool = new pgClient.Pool({
-    user: process.env.POSTGRESQL_USERNAME,
-    password: process.env.POSTGRESQL_PASSWORD,
-    host: process.env.POSTGRESQL_HOST,
-    port: process.env.POSTGRESQL_PORT,
-    database: process.env.POSTGRESQL_DATABASE
-  });
-
   pgPool.connect(function (err, client, done) {
     if (err) {
       console.log("Error connecting to PostgreSQL server." + err.stack);
@@ -185,14 +176,6 @@ app.put("/profile/:username", function(request, response) {
   const username = request.params.username;
   const profile = request.body;
 
-  let pgPool = new pgClient.Pool({
-    user: process.env.POSTGRESQL_USERNAME,
-    password: process.env.POSTGRESQL_PASSWORD,
-    host: process.env.POSTGRESQL_HOST,
-    port: process.env.POSTGRESQL_PORT,
-    database: process.env.POSTGRESQL_DATABASE
-  });
-
   pgPool.connect(function(err, client, done) {
     if (err) {
       console.log("Error connecting to PostgreSQL server." + err.stack);
@@ -214,7 +197,7 @@ app.put("/profile/:username", function(request, response) {
         } else if (res.rowCount > 0) {
           // Si un record a été modifié, on retourne un HTTP 200.
           console.log(`Utilisateur '${username}' modifié avec succès.`);
-          response.sendStatus(200);
+          response.status(200).send({ status: 'OK'})
         } else {
           console.log("User does not exist.");
           response.sendStatus(500);

@@ -19,19 +19,19 @@ export class ProfileService {
   constructor(private httpClient: HttpClient) { }
 
   public getProfile(username: string): Observable<Profile> {
-    return this.httpClient.get<Profile>(`${this.profileApiUrl}/${username}`)
+    return this.httpClient.get<Profile>(`${this.profileApiUrl}/${username}`, this.httpOptions)
       .pipe(
-        tap(_ => console.log(`Processing update profile request for \'${username}\'.`)),
+        tap(_ => console.log(`Processing get profile request for \'${username}\'.`)),
         map((profile: Profile) => {
           profile.dateBirth = new Date(profile.dateBirth);
           return profile;
         }),
-        catchError(this.handleError('saveProfile', { } as Profile))
+        catchError(this.handleError('getProfile', { } as Profile))
       );
   }
 
-  public saveProfile(profile: Profile): Observable<Profile> {
-    return this.httpClient.put<Profile>(`${this.profileApiUrl}/${profile.username}`, profile, this.httpOptions)
+  public saveProfile(profile: Profile): Observable<any> {
+    return this.httpClient.put(`${this.profileApiUrl}/${profile.username}`, profile, this.httpOptions)
     .pipe(
       tap(_ => console.log(`Processing update profile request for \'${profile.username}\'.`)),
       catchError(this.handleError('saveProfile', { } as Profile))

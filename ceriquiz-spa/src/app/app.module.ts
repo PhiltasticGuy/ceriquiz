@@ -13,6 +13,8 @@ import { NotificationComponent } from './notifications/notification.component';
 import { FormLoginComponent } from './form-login/form-login.component';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
+import { ProfileComponent } from './profile/profile.component';
+import { QuizPickerComponent } from './quiz-picker/quiz-picker.component';
 
 @NgModule({
   declarations: [
@@ -23,7 +25,9 @@ import { PageNotFoundComponent } from './page-not-found/page-not-found.component
     FormLoginComponent,
     NavbarUserAreaComponent,
     DashboardComponent,
-    PageNotFoundComponent
+    PageNotFoundComponent,
+    ProfileComponent,
+    QuizPickerComponent
   ],
   imports: [
     BrowserModule,

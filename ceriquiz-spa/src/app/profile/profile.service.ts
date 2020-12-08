@@ -30,8 +30,8 @@ export class ProfileService {
       );
   }
 
-  public saveProfile(profile: Profile): Observable<any> {
-    return this.httpClient.put(`${this.profileApiUrl}/${profile.username}`, profile, this.httpOptions)
+  public saveProfile(profile: Profile): Observable<Profile> {
+    return this.httpClient.put<Profile>(`${this.profileApiUrl}/${profile.username}`, profile, this.httpOptions)
     .pipe(
       tap(_ => console.log(`Processing update profile request for \'${profile.username}\'.`)),
       catchError(this.handleError('saveProfile', { } as Profile))

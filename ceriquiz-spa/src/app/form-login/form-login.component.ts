@@ -31,7 +31,7 @@ export class FormLoginComponent implements OnInit {
         // reconnexion suite à une déconnexion.
         if (value) {
           f.reset();
-          this.router.navigate(['login']);
+          this.router.navigate(['dashboard']);
         }
       });
     }

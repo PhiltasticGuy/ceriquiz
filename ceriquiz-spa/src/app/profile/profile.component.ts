@@ -3,6 +3,7 @@ import { ProfileService } from './profile.service';
 import Profile from './profile';
 import LoginResponse from '../authentication/login-response';
 import { NgForm } from '@angular/forms';
+import { NotificationService } from '../notifications/notification.service';
 
 @Component({
   selector: 'app-profile',
@@ -14,7 +15,7 @@ export class ProfileComponent implements OnInit {
   public tempAvatarUrl = '';
   public profile: Profile;
 
-  constructor(private profileService: ProfileService) { }
+  constructor(private profileService: ProfileService, private notificationService: NotificationService) { }
 
   ngOnInit(): void {
     const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
@@ -37,8 +38,23 @@ export class ProfileComponent implements OnInit {
   }
 
   public saveProfile(f: NgForm): void {
-    this.isEditing = false;
-    this.profile.avatarUrl = this.tempAvatarUrl;
+    if (f.valid) {
+      // Remettre la valeur dans le profil de l'utilisateur.
+      this.profile.avatarUrl = this.tempAvatarUrl;
+
+      // Sauvegarder le profil avec l'API.
+      this.profileService.saveProfile(this.profile).subscribe(() => {
+        // Basculer en mode affichage seulement.
+        this.isEditing = false;
+
+        // Afficher un message de succès.
+        this.notificationService.add(
+          true,
+          'success',
+          'Votre profil a été modifié avec succès!'
+        );
+      });
+    }
   }
 
 }

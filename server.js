@@ -74,7 +74,7 @@ app.post("/auth/login", function (request, response) {
     password: process.env.POSTGRESQL_PASSWORD,
     host: process.env.POSTGRESQL_HOST,
     port: process.env.POSTGRESQL_PORT,
-    database: process.env.POSTGRESQL_DATABASE,
+    database: process.env.POSTGRESQL_DATABASE
   });
 
   // Demander au pool un client connecté à la BD pour notre requête.
@@ -139,7 +139,7 @@ app.get("/profile/:username", function (request, response) {
     password: process.env.POSTGRESQL_PASSWORD,
     host: process.env.POSTGRESQL_HOST,
     port: process.env.POSTGRESQL_PORT,
-    database: process.env.POSTGRESQL_DATABASE,
+    database: process.env.POSTGRESQL_DATABASE
   });
 
   pgPool.connect(function (err, client, done) {
@@ -171,6 +171,50 @@ app.get("/profile/:username", function (request, response) {
 
           // Terminer la requête en retournant le data.
           response.send(data);
+        } else {
+          console.log("User does not exist.");
+          response.sendStatus(500);
+        }
+      });
+      client.release();
+    }
+  });
+});
+
+app.put("/profile/:username", function(request, response) {
+  const username = request.params.username;
+  const profile = request.body;
+
+  let pgPool = new pgClient.Pool({
+    user: process.env.POSTGRESQL_USERNAME,
+    password: process.env.POSTGRESQL_PASSWORD,
+    host: process.env.POSTGRESQL_HOST,
+    port: process.env.POSTGRESQL_PORT,
+    database: process.env.POSTGRESQL_DATABASE
+  });
+
+  pgPool.connect(function(err, client, done) {
+    if (err) {
+      console.log("Error connecting to PostgreSQL server." + err.stack);
+      response.sendStatus(500);
+    } else {
+      console.log("Connection established with PostgreSQL server.");
+
+      // Requête SQL retournant le mot de passe hashé de l'utilisateur.
+      // const sql = `UPDATE fredouil.users SET nom='${profile.lastname}', prenom='${profile.firstname}', date_naissance='${profile.dateBirth}', avatar='${profile.avatarUrl}', humeur='${profile.status}' WHERE identifiant='${username}';`;
+      const sql = `UPDATE fredouil.users SET avatar='${profile.avatarUrl}', humeur='${profile.status}' WHERE identifiant='${username}';`;
+
+      // Log pour le troubleshooting de commande SQL.
+      // console.log(sql);
+
+      client.query(sql, (err, res) => {
+        if (err) {
+          console.log("Error executing SQL query." + err.stack);
+          response.sendStatus(500);
+        } else if (res.rowCount > 0) {
+          // Si un record a été modifié, on retourne un HTTP 200.
+          console.log(`Utilisateur '${username}' modifié avec succès.`);
+          response.sendStatus(200);
         } else {
           console.log("User does not exist.");
           response.sendStatus(500);

@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import Profile from './profile';
-import { map } from 'rxjs/operators';
+import { map, tap, catchError } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfileService {
-  // private authApiUrl = 'http://pedago.univ-avignon.fr:3021/auth/login';
+  // private profileApiUrl = 'http://pedago.univ-avignon.fr:3021/profile';
   private profileApiUrl = 'http://127.0.0.1:3021/profile';
 
   // Options pour les HTTP Headers utilisées lors des requêtes HTTP.
@@ -21,10 +21,42 @@ export class ProfileService {
   public getProfile(username: string): Observable<Profile> {
     return this.httpClient.get<Profile>(`${this.profileApiUrl}/${username}`)
       .pipe(
+        tap(_ => console.log(`Processing update profile request for \'${username}\'.`)),
         map((profile: Profile) => {
           profile.dateBirth = new Date(profile.dateBirth);
           return profile;
-        })
+        }),
+        catchError(this.handleError('saveProfile', { } as Profile))
       );
+  }
+
+  public saveProfile(profile: Profile): Observable<Profile> {
+    return this.httpClient.put<Profile>(`${this.profileApiUrl}/${profile.username}`, profile, this.httpOptions)
+    .pipe(
+      tap(_ => console.log(`Processing update profile request for \'${profile.username}\'.`)),
+      catchError(this.handleError('saveProfile', { } as Profile))
+    );
+  }
+
+  /**
+   * Assurer une bonne gestion d'une erreur survenue lors d'une requête HTTP.
+   *
+   * Idée empruntée de la partie 6 du tutoriel d'Angular:
+   * https://angular.io/tutorial/toh-pt6#handleerror
+   *
+   * @param operation - Nom de l'opération à l'origine de l'erreur.
+   * @param result - Valeur optionelle retournée en tant qu'Observable<T>.
+   */
+  private handleError<T>(operation = 'operation', result?: T): any {
+    return (error: any): Observable<T> => {
+      // Stocker cette erreur dans notre infrastructure de logging.
+      // TODO: Trouver une meilleur infrastructure de logging que la console du client...
+      console.error(error); // log to console instead
+
+      // L'observable permet à l'application de continuer d'exécuter tandis que
+      // les subscribers receveront éventuellement la réponse du traitement de
+      // cette erreur.
+      return of(result as T);
+    };
   }
 }

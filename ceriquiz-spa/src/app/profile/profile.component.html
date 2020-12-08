@@ -40,13 +40,10 @@
         <label for="txtAvatarUrl" class="col-sm-2 col-form-label">Avatar URL</label>
         <div class="col-sm-10">
           <input type="text" class="form-control" id="txtAvatarUrl" name="txtAvatarUrl" placeholder="Avatar URL"
-          #avatarUrl="ngModel" [(ngModel)]="tempAvatarUrl" required maxlength="100">
+          #avatarUrl="ngModel" [(ngModel)]="tempAvatarUrl" maxlength="100">
         </div>
       </div>
       <div *ngIf="avatarUrl.invalid && (avatarUrl.dirty || avatarUrl.touched)" class="alert alert-danger">
-        <div *ngIf="avatarUrl.errors?.required">
-          L'URL de l'avatar ne peut pas être vide
-        </div>
         <div *ngIf="avatarUrl.errors?.maxlength">
           L'URL de l'avatar ne peut contenir qu'un maximun de 100 caractères
         </div>

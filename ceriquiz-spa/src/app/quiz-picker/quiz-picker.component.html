@@ -1,22 +1,101 @@
 <h1>Les Quizz</h1>
 
-<h2>Choisir un thème</h2>
+<div *ngIf="!isQuizStarted">
+  <h2>Choisir un thème</h2>
 
-<div class="row">
-  <div class="col-sm-4 mb-3" *ngFor="let quiz of quizList">
-    <div class="card text-center">
-      <!-- <div class="card-header">
-        Featured
-      </div> -->
-      <div class="card-body">
-        <p class="card-title">{{ quiz.theme }}</p>
-        <p class="card-subtitle mb-2 text-muted">Écrit par {{ quiz.writer }}</p>
-        <!-- <p class="card-text">Ce quiz est fourni par <i>{{ quiz.provider }}</i></p> -->
-        <button type="button" class="btn btn-primary" (click)="onClick(quiz.id)">Lancer</button>
+  <div class="row" *ngIf="!quizId">
+    <div class="col-sm-4 mb-3" *ngFor="let quiz of quizList">
+      <div class="card text-center">
+        <!-- <div class="card-header">
+          Featured
+        </div> -->
+        <div class="card-body">
+          <p class="card-title">{{ quiz.theme }}</p>
+          <p class="card-subtitle mb-2 text-muted">Écrit par {{ quiz.writer }}</p>
+          <!-- <p class="card-text">Ce quiz est fourni par <i>{{ quiz.provider }}</i></p> -->
+          <button type="button" class="btn btn-primary" (click)="onClick(quiz)">Choisir<span class="sr-only"> le quiz '{{ quiz.theme }}'</span></button>
+        </div>
+        <!-- <div class="card-footer text-muted">
+          2 days ago
+        </div> -->
       </div>
-      <!-- <div class="card-footer text-muted">
-        2 days ago
-      </div> -->
+    </div>
+  </div>
+  <div class="row" *ngIf="quizId">
+    <div class="col-sm-12 text-center">
+      <p><span class="sr-only">Thème choisi: </span><span class="selected-difficulty">{{ quizTheme }}</span></p>
+    </div>
+  </div>
+  <hr>
+</div>
+
+<div *ngIf="!isQuizStarted && quizId">
+  <h2>Choisir un niveau de difficulté</h2>
+
+  <div class="row">
+    <div class="col-sm-12 text-center">
+      <div class="btn-group btn-group-toggle" ngbRadioGroup name="radioBasic" [(ngModel)]="difficulty">
+        <label ngbButtonLabel class="btn-secondary">
+          <input ngbButton type="radio" value="easy"> Facile
+        </label>
+        <label ngbButtonLabel class="btn-secondary">
+          <input ngbButton type="radio" value="medium"> Intermédiaire
+        </label>
+        <label ngbButtonLabel class="btn-secondary">
+          <input ngbButton type="radio" value="hard"> Difficile
+        </label>
+      </div>
+    </div>
+    <div class="col-sm-12 text-center">
+      <p><span class="sr-only">Niveau de difficulté choisi: </span><span class="selected-difficulty">{{ displayDifficulty() }}</span></p>
+    </div>
+    <div class="col-sm-12 text-center">
+      <button type="button" class="btn btn-primary m-1" (click)="onStartQuiz(quizId, difficulty)">Lancer</button>
+      <button type="button" class="btn btn-primary m-1" (click)="onCancel()">Annuler</button>
+    </div>
+  </div>
+    
+  <hr>
+</div>
+
+<div *ngIf="isQuizStarted">
+  <div *ngFor="let question of questions">
+    <div *ngIf="questions[currentQuestionIndex].id === question.id">
+      <div class="row justify-content-center">
+        <div class="col-sm-6 mb-3">
+          <div class="card text-center">
+            <div class="card-header">
+              <h2>Question #{{ question.id }}</h2>
+            </div>
+            <div class="card-body">
+              <p class="card-title">{{ question.question }}</p>
+              <div class="list-group">
+                <button type="button" class="list-group-item list-group-item-action" 
+                [ngClass]="{
+                  'list-group-item-secondary': this.selectedAnswer,
+                  'list-group-item-danger': this.selectedAnswer && option.key == this.selectedAnswer && option.key != this.correctAnswer,
+                  'list-group-item-success': this.selectedAnswer && option.key == this.correctAnswer
+                }"
+                [disabled]="this.selectedAnswer"
+                (click)="onCheckAnswer(quizId, currentQuestionIndex, option.key)" 
+                *ngFor="let option of question.options | keyvalue">
+                  {{ option.value }}
+                </button>
+              </div>
+            </div>
+            <div class="card-footer text-muted" *ngIf="this.selectedAnswer">
+              {{ question.funFact }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="row" *ngIf="this.selectedAnswer">
+        <div class="col-sm-12 text-center">
+          <button type="button" class="btn btn-primary m-1" (click)="onNextQuestion()">Passer à la prochaine question</button>
+        </div>
+      </div>
+        
+      <hr>
     </div>
   </div>
 </div>

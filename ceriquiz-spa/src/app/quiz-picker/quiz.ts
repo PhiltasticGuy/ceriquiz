@@ -11,3 +11,7 @@ export interface Question {
   options: string[];
   funFact: string;
 }
+
+export interface CorrectAnswer {
+  answer: string;
+}

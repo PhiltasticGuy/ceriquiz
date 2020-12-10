@@ -305,14 +305,14 @@ app.get('/api/quiz/:quizId/questions/:questionId', (request, response) => {
 
             // Utiliser la déconstruction pour extraire le premier élément du
             // tableau.
-            const [first] = data;
+            const [first] = data.map(q => ({ "answer": q.réponse }));
 
             // Si le tableau contenait au moins un élément...
             if (first) {
               console.log("Check answer: " + JSON.stringify(first));
 
               // Comparer cet élément à notre question.
-              response.send((first.réponse === request.query.answer));
+              response.send(first);
             }
             else {
               console.log(`The question '${request.params.questionId}' for quiz '${request.params.quizId}' does not exist.`);

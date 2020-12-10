@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Quiz, Question } from './quiz';
+import { Quiz, Question, CorrectAnswer } from './quiz';
 import { Observable, of } from 'rxjs';
 import { catchError, map, tap } from 'rxjs/operators';
 
@@ -40,12 +40,12 @@ export class QuizService {
     return [] as Question[];
   }
 
-  public checkAnswer(quizId: string, questionId: number, answer: string): Observable<boolean> {
+  public checkAnswer(quizId: string, questionId: number, answer: string): Observable<CorrectAnswer> {
     const url = `${this.quizApiUrl}/${quizId}/questions/${questionId}?answer=${encodeURI(answer)}`;
-    return this.httpClient.get<boolean>(url, this.httpOptions)
+    return this.httpClient.get<CorrectAnswer>(url, this.httpOptions)
     .pipe(
       tap(_ => console.log(`Processing check answer request for quiz \'${quizId}\', question \'${questionId}\' and answer \'${answer}\'.`)),
-      catchError(this.handleError('checkAnswer', false))
+      catchError(this.handleError('checkAnswer', {} as CorrectAnswer))
     );
   }
 

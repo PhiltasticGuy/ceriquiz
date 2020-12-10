@@ -4,14 +4,25 @@
   line-height: 1.2;
   margin-top: 0;
 }
-
 .card-subtitle {
   font-size: 1rem;
   font-family: inherit;
   font-weight: 500;
   line-height: 1.2;
 }
-
 h2 {
   margin-bottom: 1.25rem;
+}
+.selected-difficulty {
+  font-size: 2rem;
+  font-weight: bold;
+}
+.list-group-item-secondary:disabled {
+  background-color: #d6d8db;
+}
+.list-group-item-success:disabled {
+  background-color: #c3e6cb;
+}
+.list-group-item-danger:disabled {
+  background-color: #f5c6cb;
 }

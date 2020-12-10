@@ -17,6 +17,9 @@ h2 {
   font-size: 2rem;
   font-weight: bold;
 }
+.card-header h3 {
+  margin-bottom: 0px;
+}
 .list-group-item-secondary:disabled {
   background-color: #d6d8db;
 }

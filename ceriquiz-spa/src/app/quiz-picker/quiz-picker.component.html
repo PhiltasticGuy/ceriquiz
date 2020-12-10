@@ -59,13 +59,15 @@
 </div>
 
 <div *ngIf="isQuizStarted">
+  <h2>{{ quizTheme }}</h2>
+
   <div *ngFor="let question of questions">
     <div *ngIf="questions[currentQuestionIndex].id === question.id">
       <div class="row justify-content-center">
         <div class="col-sm-6 mb-3">
           <div class="card text-center">
             <div class="card-header">
-              <h2>Question #{{ question.id }}</h2>
+              <h3>Question #{{ question.id }}</h3>
             </div>
             <div class="card-body">
               <p class="card-title">{{ question.question }}</p>

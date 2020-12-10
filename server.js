@@ -5,6 +5,8 @@ const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 const session = require("express-session");
 const MongoDBStore = require("connect-mongodb-session")(session);
+const mongo = require("mongodb");
+const mongoClient = mongo.MongoClient;
 const pgClient = require("pg");
 var crypto = require("crypto");
 
@@ -29,26 +31,27 @@ app.use(bodyParser.json({ limit: "10mb" }));
 // app.use(cors({credentials: true}));
 // app.use(cors());
 
+// Configuration du serveur MongoDB.
+const dsnMongoDb = "mongodb://127.0.0.1:27017/db";
+
 // Configuration des sessions sur MongoDB.
 var store = new MongoDBStore({
-  uri: "mongodb://127.0.0.1:27017/db",
+  uri: dsnMongoDb,
   // uri: "mongodb://localhost:27017/db",
   collection: "mySessions3022",
-  touchAfter: 24 * 3600,
+  touchAfter: 24 * 3600
 });
 store.on("error", function (error) {
   console.log(error);
 });
-app.use(
-  session({
-    secret: "Security through obscurity!",
-    // secret: "",
-    saveUninitialized: false,
-    resave: false,
-    store: store,
-    cookie: { maxAge: 24 * 3600 * 1000, httpOnly: true, secure: false },
-  })
-);
+app.use(session({
+  secret: "Security through obscurity!",
+  // secret: "",
+  saveUninitialized: false,
+  resave: false,
+  store: store,
+  cookie: { maxAge: 24 * 3600 * 1000, httpOnly: true, secure: false }
+}));
 
 // Pool de connection à la base de donnée PostgreSQL.
 const pgPool = new pgClient.Pool({
@@ -69,7 +72,7 @@ app.get("/", function (request, response) {
 });
 
 // Gestion de méthode POST sur '/login'.
-app.post("/auth/login", function (request, response) {
+app.post("/api/auth/login", function (request, response) {
   // Extraire l'information de la requête HTTP afin de la traiter.
   const username = request.body.username;
   const password = request.body.password;
@@ -80,7 +83,7 @@ app.post("/auth/login", function (request, response) {
   // Demander au pool un client connecté à la BD pour notre requête.
   pgPool.connect(function (err, client, done) {
     if (err) {
-      console.log("Error connecting to PostgreSQL server." + err.stack);
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
       response.sendStatus(500);
     } else {
       console.log("Connection established with PostgreSQL server.");
@@ -96,7 +99,7 @@ app.post("/auth/login", function (request, response) {
           .digest("hex");
 
         if (err) {
-          console.log("Error executing SQL query." + err.stack);
+          console.log("Error executing SQL query.\n\n" + err.stack);
           response.sendStatus(500);
         } else if (res.rows.length > 0 && res.rows[0].motpasse == hashedPassword) {
           // Créer la session pour cet utilisateur valide.
@@ -127,7 +130,7 @@ app.post("/auth/login", function (request, response) {
   });
 });
 
-app.get("/profile/:username", function (request, response) {
+app.get("/api/profile/:username", function (request, response) {
   console.log(JSON.stringify(request.session.user));
 
   // Extraire l'information de la requête HTTP afin de la traiter.
@@ -135,7 +138,7 @@ app.get("/profile/:username", function (request, response) {
 
   pgPool.connect(function (err, client, done) {
     if (err) {
-      console.log("Error connecting to PostgreSQL server." + err.stack);
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
       response.sendStatus(500);
     } else {
       console.log("Connection established with PostgreSQL server.");
@@ -145,7 +148,7 @@ app.get("/profile/:username", function (request, response) {
 
       client.query(sql, (err, res) => {
         if (err) {
-          console.log("Error executing SQL query." + err.stack);
+          console.log("Error executing SQL query.\n\n" + err.stack);
           response.sendStatus(500);
         } else if (res.rows.length > 0) {
           // Créer la session pour cet utilisateur valide.
@@ -172,13 +175,13 @@ app.get("/profile/:username", function (request, response) {
   });
 });
 
-app.put("/profile/:username", function(request, response) {
+app.put("/api/profile/:username", function(request, response) {
   const username = request.params.username;
   const profile = request.body;
 
   pgPool.connect(function(err, client, done) {
     if (err) {
-      console.log("Error connecting to PostgreSQL server." + err.stack);
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
       response.sendStatus(500);
     } else {
       console.log("Connection established with PostgreSQL server.");
@@ -192,7 +195,7 @@ app.put("/profile/:username", function(request, response) {
 
       client.query(sql, (err, res) => {
         if (err) {
-          console.log("Error executing SQL query." + err.stack);
+          console.log("Error executing SQL query.\n\n" + err.stack);
           response.sendStatus(500);
         } else if (res.rowCount > 0) {
           // Si un record a été modifié, on retourne un HTTP 200.
@@ -204,6 +207,119 @@ app.put("/profile/:username", function(request, response) {
         }
       });
       client.release();
+    }
+  });
+});
+
+app.get('/api/quiz', (request, response) => {
+  mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
+    if (err) {
+      console.log("Error connecting to MongoDB server.\n\n" + err.stack);
+      response.sendStatus(500);
+    }
+    else if (mongoClient) {
+      mongoClient.db().collection('quizz').find().project({
+        "_id": 1,
+        "fournisseur": 1,
+        "rédacteur": 1,
+        "thème": 1
+      })
+      .map(q => ({
+        id: q._id,
+        provider: q.fournisseur,
+        writer: q.rédacteur,
+        theme: q.thème
+      })).toArray(function (err, data) {
+        if (err) {
+          console.log("Error executing query on MongoDB server.\n\n" + err.stack);
+          response.sendStatus(500);
+        }
+        else if(data) {
+          // console.log(data);
+          mongoClient.close();
+          response.send(data);
+        }
+      });
+    }
+  });
+});
+
+app.get('/api/quiz/:quizId/questions', (request, response) => {
+  mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
+    if (err) {
+      console.log("Error connecting to MongoDB server.\n\n" + err.stack);
+      response.sendStatus(500);
+    }
+    else if (mongoClient) {
+      mongoClient.db().collection('quizz').findOne(
+        { "_id": new mongo.ObjectId(request.params.quizId) },
+        { projection: {
+          "_id": 0,
+          "quizz.id": 1,
+          "quizz.question": 1,
+          "quizz.propositions": 1,
+          "quizz.anecdote": 1
+        }},
+        function (err, data) {
+          if (err) {
+            console.log("Error executing query on MongoDB server.\n\n" + err.stack);
+            response.sendStatus(500);
+          }
+          else if(data) {
+            const quiz = data.quizz.map(q => ({
+              id: q.id,
+              question: q.question,
+              options: q.propositions,
+              funFact: q.anecdote
+            }));
+            mongoClient.close();
+            response.send(quiz);
+          }
+      });
+    }
+  });
+});
+
+// ?answer=:answer
+app.get('/api/quiz/:quizId/questions/:questionId', (request, response) => {
+  mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
+    if (err) {
+      console.log("Error connecting to MongoDB server.\n\n" + err.stack);
+      response.sendStatus(500);
+    }
+    else if (mongoClient) {
+      const pipeline = [
+        { "$match": { '_id': new mongo.ObjectID(request.params.quizId) } },
+        { "$unwind": "$quizz" },
+        { "$match": { "quizz.id": parseInt(request.params.questionId) } },
+        { "$project": { "_id": 0, "réponse": "$quizz.réponse" } }
+      ];
+      const aggCursor = mongoClient.db().collection("quizz")
+        .aggregate(pipeline).toArray(function (err, data) {
+          if (err) {
+            console.log("Error executing query on MongoDB server.\n\n" + err.stack);
+            response.sendStatus(500);
+          }
+          else if(data) {
+            mongoClient.close();
+
+            // Utiliser la déconstruction pour extraire le premier élément du
+            // tableau.
+            const [first] = data;
+
+            // Si le tableau contenait au moins un élément...
+            if (first) {
+              console.log("Check answer: " + JSON.stringify(first));
+
+              // Comparer cet élément à notre question.
+              response.send((first.réponse === request.query.answer));
+            }
+            else {
+              console.log(`The question '${request.params.questionId}' for quiz '${request.params.quizId}' does not exist.`);
+              response.sendStatus(404);
+            }
+          }
+        });
     }
   });
 });

@@ -1,1 +1,22 @@
-<p>quiz-picker works!</p>
+<h1>Les Quizz</h1>
+
+<h2>Choisir un thème</h2>
+
+<div class="row">
+  <div class="col-sm-4 mb-3" *ngFor="let quiz of quizList">
+    <div class="card text-center">
+      <!-- <div class="card-header">
+        Featured
+      </div> -->
+      <div class="card-body">
+        <p class="card-title">{{ quiz.theme }}</p>
+        <p class="card-subtitle mb-2 text-muted">Écrit par {{ quiz.writer }}</p>
+        <!-- <p class="card-text">Ce quiz est fourni par <i>{{ quiz.provider }}</i></p> -->
+        <button type="button" class="btn btn-primary" (click)="onClick(quiz.id)">Lancer</button>
+      </div>
+      <!-- <div class="card-footer text-muted">
+        2 days ago
+      </div> -->
+    </div>
+  </div>
+</div>

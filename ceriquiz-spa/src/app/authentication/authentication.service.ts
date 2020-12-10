@@ -11,8 +11,8 @@ import { NotificationService } from '../notifications/notification.service';
   providedIn: 'root'
 })
 export class AuthenticationService {
-  // private authApiUrl = 'http://pedago.univ-avignon.fr:3021/auth/login';
-  private authApiUrl = 'http://127.0.0.1:3021/auth/login';
+  // private authApiUrl = 'http://pedago.univ-avignon.fr:3021/api/auth/login';
+  private authApiUrl = 'http://127.0.0.1:3021/api/auth/login';
   private authenticated: BehaviorSubject<boolean>;
 
   // Options pour les HTTP Headers utilisées lors des requêtes HTTP.

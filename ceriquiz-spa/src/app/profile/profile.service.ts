@@ -8,8 +8,8 @@ import { map, tap, catchError } from 'rxjs/operators';
   providedIn: 'root'
 })
 export class ProfileService {
-  // private profileApiUrl = 'http://pedago.univ-avignon.fr:3021/profile';
-  private profileApiUrl = 'http://127.0.0.1:3021/profile';
+  // private profileApiUrl = 'http://pedago.univ-avignon.fr:3021/api/profile';
+  private profileApiUrl = 'http://127.0.0.1:3021/api/profile';
 
   // Options pour les HTTP Headers utilisées lors des requêtes HTTP.
   private readonly httpOptions = {

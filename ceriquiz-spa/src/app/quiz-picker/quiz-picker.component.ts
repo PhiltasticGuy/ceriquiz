@@ -16,7 +16,7 @@ export class QuizPickerComponent implements OnInit {
   public isQuizStarted = false;
   public currentQuestionIndex: number;
   public selectedAnswer: number;
-  public correctAnswer: number = 0;
+  public correctAnswer: number;
 
   constructor(private quizService: QuizService) { }
 
@@ -72,24 +72,10 @@ export class QuizPickerComponent implements OnInit {
       this.questions[questionIndex].id,
       this.questions[questionIndex].options[answerKey])
     .subscribe(value => {
-      console.log('Correct answer? ' + this.questions[questionIndex].options.indexOf(value.answer));
       console.log('Is correct answer? ' + (value.answer === this.questions[questionIndex].options[answerKey]));
       this.correctAnswer = this.questions[questionIndex].options.indexOf(value.answer);
       this.selectedAnswer = answerKey;
     });
-  }
-
-  public isCorrectAnswer(answerKey: number, questionId: number): boolean {
-    console.log(`Q${questionId}: ${answerKey} === ${this.correctAnswer} => ${answerKey === this.correctAnswer}`);
-    const res = (answerKey === this.correctAnswer);
-    return res;
-  }
-
-  public isWrongAnswer(answerKey: number, questionId: number): boolean {
-    // option.key === selectedAnswer && option.key !== correctAnswer;
-    console.log(`Q${questionId}: ${answerKey} !== ${this.correctAnswer} => ${answerKey !== this.correctAnswer}`);
-    const res = (answerKey === this.correctAnswer);
-    return res;
   }
 
   public onNextQuestion(): void {

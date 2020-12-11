@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { QuizService } from './quiz.service';
 import { Quiz, Question, DifficultyTypes } from './quiz';
+import { TimerComponent } from '../timer/timer.component';
 
 @Component({
   selector: 'app-quiz-picker',
@@ -14,6 +15,7 @@ export class QuizPickerComponent implements OnInit {
   public quizTheme: string;
   public difficulty: DifficultyTypes;
   public isQuizStarted = false;
+  public isTimerRunning = false;
   public currentQuestionIndex: number;
   public selectedAnswer: number;
   public correctAnswer: number;
@@ -49,9 +51,11 @@ export class QuizPickerComponent implements OnInit {
   public onStartQuiz(quizId: string, difficulty: DifficultyTypes): void {
     this.quizService.getQuestionsByDifficulty(quizId, difficulty).subscribe((questions: Question[]) => {
       console.log(JSON.stringify(questions));
+      
       this.questions = questions;
-      this.isQuizStarted = true;
       this.currentQuestionIndex = 0;
+      this.isQuizStarted = true;
+      this.isTimerRunning = true;
     });
   }
 
@@ -62,10 +66,14 @@ export class QuizPickerComponent implements OnInit {
     this.difficulty = undefined;
   }
 
-  public onCheckAnswer(quizId: string, questionIndex: number, answerKey: number): void {
-    // TODO: Pause timer.
+  public checkQuizStarted(timer: TimerComponent): boolean {
+    this.isTimerRunning = true;
+    return this.isQuizStarted;
+  }
 
-    console.log(`Checking answer for quiz \'${quizId}\', question \'${questionIndex}\' and answer \'${answerKey}\'.`);
+  public onCheckAnswer(quizId: string, questionIndex: number, answerKey: number, timer: TimerComponent): void {
+    this.isTimerRunning = false;
+
     this.quizService
     .checkAnswer(
       quizId,
@@ -78,16 +86,16 @@ export class QuizPickerComponent implements OnInit {
     });
   }
 
-  public onNextQuestion(): void {
+  public onNextQuestion(timer: TimerComponent): void {
     this.currentQuestionIndex++;
     this.selectedAnswer = undefined;
     this.correctAnswer = undefined;
 
-    // TODO: Unpause timer.
+    this.isTimerRunning = true;
   }
 
-  public onViewResults(): void {
-
+  public onViewResults(timer: TimerComponent): void {
+    this.isTimerRunning = false;
   }
 
   public toQuestionNumber(key: string): number {

@@ -61,6 +61,12 @@
 <div *ngIf="isQuizStarted">
   <h2>{{ quizTheme }}</h2>
 
+  <div class="row">
+    <div class="col-sm-12 text-center">
+      <app-timer #timer [toggle]="isTimerRunning"></app-timer>
+    </div>
+  </div>
+  
   <div *ngFor="let question of questions | keyvalue">
     <div *ngIf="questions[currentQuestionIndex].id === question.value.id">
       <div class="row justify-content-center">
@@ -79,7 +85,7 @@
                   'list-group-item-success': this.selectedAnswer && option.key == this.correctAnswer
                 }"
                 [disabled]="this.selectedAnswer"
-                (click)="onCheckAnswer(quizId, currentQuestionIndex, option.key)" 
+                (click)="onCheckAnswer(quizId, currentQuestionIndex, option.key, timer)" 
                 *ngFor="let option of question.value.options | keyvalue">
                   {{ option.value }}
                 </button>
@@ -95,11 +101,11 @@
         <div class="col-sm-12 text-center">
           <button type="button" class="btn btn-primary m-1"
           *ngIf="toQuestionNumber(question.key) !== questions.length"
-          (click)="onNextQuestion()">Passer à la prochaine question</button>
+          (click)="onNextQuestion(timer)">Passer à la prochaine question</button>
 
           <button type="button" class="btn btn-primary m-1"
           *ngIf="toQuestionNumber(question.key) === questions.length" 
-          (click)="onViewResults()">Voir vos résultats</button>
+          (click)="onViewResults(timer)">Voir vos résultats</button>
         </div>
       </div>
         

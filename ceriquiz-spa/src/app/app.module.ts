@@ -15,6 +15,7 @@ import { DashboardComponent } from './dashboard/dashboard.component';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 import { ProfileComponent } from './profile/profile.component';
 import { QuizPickerComponent } from './quiz-picker/quiz-picker.component';
+import { TimerComponent } from './timer/timer.component';
 
 @NgModule({
   declarations: [
@@ -27,7 +28,8 @@ import { QuizPickerComponent } from './quiz-picker/quiz-picker.component';
     DashboardComponent,
     PageNotFoundComponent,
     ProfileComponent,
-    QuizPickerComponent
+    QuizPickerComponent,
+    TimerComponent
   ],
   imports: [
     BrowserModule,

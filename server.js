@@ -235,10 +235,9 @@ app.get('/api/quiz', (request, response) => {
           response.sendStatus(500);
         }
         else if(data) {
-          // console.log(data);
-          mongoClient.close();
           response.send(data);
         }
+        mongoClient.close();
       });
     }
   });
@@ -272,15 +271,41 @@ app.get('/api/quiz/:quizId/questions', (request, response) => {
               options: q.propositions,
               funFact: q.anecdote
             }));
-            mongoClient.close();
-            response.send(quiz);
+
+            if (request.query.difficulty) {
+              let questionCount;
+              if (request.query.difficulty === 'easy') {
+                questionCount = 2;
+              }
+              else if (request.query.difficulty === 'medium') {
+                questionCount = 3
+              }
+              else {
+                questionCount = 4;
+              }
+  
+              let finalCut = [];
+              while (finalCut.length < questionCount) {
+                const random = quiz[Math.floor(Math.random() * quiz.length)];
+  
+                if (!finalCut.some(e => e.id === random.id)) {
+                  finalCut.push(random);
+                }
+              }
+              
+              response.send(finalCut);
+            }
+            else {
+              response.send(quiz);
+            }
           }
+          
+          mongoClient.close();
       });
     }
   });
 });
 
-// ?answer=:answer
 app.get('/api/quiz/:quizId/questions/:questionId', (request, response) => {
   mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
     if (err) {
@@ -301,8 +326,6 @@ app.get('/api/quiz/:quizId/questions/:questionId', (request, response) => {
             response.sendStatus(500);
           }
           else if(data) {
-            mongoClient.close();
-
             // Utiliser la déconstruction pour extraire le premier élément du
             // tableau.
             const [first] = data.map(q => ({ "answer": q.réponse }));
@@ -319,6 +342,7 @@ app.get('/api/quiz/:quizId/questions/:questionId', (request, response) => {
               response.sendStatus(404);
             }
           }
+          mongoClient.close();
         });
     }
   });

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { QuizService } from './quiz.service';
-import { Quiz, Question } from './quiz';
+import { Quiz, Question, DifficultyTypes } from './quiz';
 
 @Component({
   selector: 'app-quiz-picker',
@@ -12,7 +12,7 @@ export class QuizPickerComponent implements OnInit {
   public questions: Question[] = [];
   public quizId: string;
   public quizTheme: string;
-  public difficulty: 'easy' | 'medium' | 'hard';
+  public difficulty: DifficultyTypes;
   public isQuizStarted = false;
   public currentQuestionIndex: number;
   public selectedAnswer: number;
@@ -46,8 +46,8 @@ export class QuizPickerComponent implements OnInit {
     }
   }
 
-  public onStartQuiz(quizId: string, difficulty: string): void {
-    this.quizService.getQuestions(quizId).subscribe((questions: Question[]) => {
+  public onStartQuiz(quizId: string, difficulty: DifficultyTypes): void {
+    this.quizService.getQuestionsByDifficulty(quizId, difficulty).subscribe((questions: Question[]) => {
       console.log(JSON.stringify(questions));
       this.questions = questions;
       this.isQuizStarted = true;
@@ -84,6 +84,14 @@ export class QuizPickerComponent implements OnInit {
     this.correctAnswer = undefined;
 
     // TODO: Unpause timer.
+  }
+
+  public onViewResults(): void {
+
+  }
+
+  public toQuestionNumber(key: string): number {
+    return Number(key) + 1;
   }
 
 }

@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Quiz, Question, CorrectAnswer } from './quiz';
+import { Quiz, Question, CorrectAnswer, DifficultyTypes } from './quiz';
 import { Observable, of } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { catchError, map, tap, take } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -32,12 +32,17 @@ export class QuizService {
     return this.httpClient.get<Question[]>(url, this.httpOptions)
     .pipe(
       tap(_ => console.log(`Processing get questions request for quiz \'${quizId}\'.`)),
-      catchError(this.handleError('getQuizList', [] as Question[]))
+      catchError(this.handleError('getQuestions', [] as Question[]))
     );
   }
 
-  public getQuestionsByDifficulty(quizId: string, difficulty: number): Question[] {
-    return [] as Question[];
+  public getQuestionsByDifficulty(quizId: string, difficulty: DifficultyTypes): Observable<Question[]> {
+    const url = `${this.quizApiUrl}/${quizId}/questions?difficulty=${difficulty}`;
+    return this.httpClient.get<Question[]>(url, this.httpOptions)
+    .pipe(
+      tap(_ => console.log(`Processing get questions request for quiz \'${quizId}\'.`)),
+      catchError(this.handleError('getQuestionsByDifficulty', [] as Question[]))
+    );
   }
 
   public checkAnswer(quizId: string, questionId: number, answer: string): Observable<CorrectAnswer> {

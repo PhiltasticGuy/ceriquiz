@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Quiz, Question, CorrectAnswer, DifficultyTypes } from './quiz';
 import { Observable, of } from 'rxjs';
-import { catchError, map, tap, take } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 
 @Injectable({
   providedIn: 'root'
@@ -36,7 +36,7 @@ export class QuizService {
     );
   }
 
-  public getQuestionsByDifficulty(quizId: string, difficulty: DifficultyTypes): Observable<Question[]> {
+  public getQuestionsByDifficulty(quizId: string, difficulty: string): Observable<Question[]> {
     const url = `${this.quizApiUrl}/${quizId}/questions?difficulty=${difficulty}`;
     return this.httpClient.get<Question[]>(url, this.httpOptions)
     .pipe(

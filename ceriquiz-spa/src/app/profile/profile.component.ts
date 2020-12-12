@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ProfileService } from './profile.service';
-import Profile from './profile';
+import Profile, { Score } from './profile';
 import LoginResponse from '../authentication/login-response';
 import { NgForm } from '@angular/forms';
 import { NotificationService } from '../notifications/notification.service';
+import { DifficultyTypes } from '../quiz-picker/quiz';
 
 @Component({
   selector: 'app-profile',
@@ -14,6 +15,7 @@ export class ProfileComponent implements OnInit {
   public isEditing = false;
   public tempAvatarUrl = '';
   public profile: Profile;
+  public scoreLogs: Score[];
 
   constructor(private profileService: ProfileService, private notificationService: NotificationService) { }
 
@@ -22,6 +24,9 @@ export class ProfileComponent implements OnInit {
     this.profileService.getProfile(data.username).subscribe(value => {
       this.profile = value;
       this.tempAvatarUrl = this.profile.avatarUrl;
+    });
+    this.profileService.getScoreLog(data.username).subscribe(value => {
+      this.scoreLogs = value;
     });
   }
 
@@ -65,6 +70,21 @@ export class ProfileComponent implements OnInit {
       this.profile = value;
       this.tempAvatarUrl = this.profile.avatarUrl;
     });
+  }
+
+  public displayDifficulty(difficulty: DifficultyTypes): string {
+    if (difficulty === 1) {
+      return 'Facile';
+    }
+    else if (difficulty === 2) {
+      return 'Intermédiaire';
+    }
+    else if (difficulty === 3) {
+      return 'Difficile';
+    }
+    else {
+      return '';
+    }
   }
 
 }

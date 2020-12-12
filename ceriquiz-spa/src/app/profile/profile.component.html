@@ -1,5 +1,6 @@
 <div *ngIf="profile">
-  <h1>Profil - {{ profile.username }}</h1>
+  <h1>Profil</h1>
+  <h2>{{ profile.username }}</h2>
 
   <div class="row justify-content-center mb-3">
     <!-- <img src="{{ (profile.avatarUrl === 'assets/question-mark.jpg' ? profile.avatarUrl : temp) }}" class="rounded-circle" width="200" height="200"
@@ -115,4 +116,29 @@
       </div>
     </form>
   </div>
+
+  <hr>
+
+  <h2>Historique</h2>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Date</th>
+        <th scope="col">Niveau de difficulté</th>
+        <th scope="col">Bonne(s) réponse(s)</th>
+        <th scope="col">Temps</th>
+        <th scope="col">Score</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let score of scoreLogs">
+        <td>{{ score.date | date:'dd/MM/yyyy' }}</td>
+        <td>{{ displayDifficulty(score.difficulty) }}</td>
+        <td>{{ score.correctAnswers }}</td>
+        <td>{{ score.timeInSeconds }}</td>
+        <td>{{ score.score }}</td>
+      </tr>
+    </tbody>
+  </table>
 </div>

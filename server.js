@@ -211,6 +211,83 @@ app.put("/api/profile/:username", function(request, response) {
   });
 });
 
+app.get("/api/profile/:username/score", function (request, response) {
+  console.log(JSON.stringify(request.session.user));
+
+  // Extraire l'information de la requête HTTP afin de la traiter.
+  const username = request.params.username;
+
+  pgPool.connect(function (err, client, done) {
+    if (err) {
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
+      response.sendStatus(500);
+    } else {
+      console.log("Connection established with PostgreSQL server.");
+
+      // Requête SQL retournant l'historique des scores de l'utilisateur.
+      const sql = `SELECT h.* FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user WHERE u.identifiant='${username}';`;
+
+      client.query(sql, (err, res) => {
+        if (err) {
+          console.log("Error executing SQL query.\n\n" + err.stack);
+          response.sendStatus(500);
+        } else if (res.rows.length > 0) {
+          const data = res.rows.map(x => ({
+            username: username,
+            date: x.date_jeu,
+            difficulty: x.niveau_jeu,
+            correctAnswers: x.nb_reponses_corr,
+            timeInSeconds: x.temps,
+            score: x.score
+          }));
+
+          // Terminer la requête en retournant le data.
+          response.send(data);
+        } else {
+          console.log("No score log for this user.");
+          response.sendStatus(500);
+        }
+      });
+      client.release();
+    }
+  });
+});
+
+app.post("/api/profile/:username/score", function (request, response) {
+  console.log(JSON.stringify(request.session.user));
+
+  // Extraire l'information de la requête HTTP afin de la traiter.
+  const username = request.params.username;
+  const score = request.body;
+
+  pgPool.connect(function (err, client, done) {
+    if (err) {
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
+      response.sendStatus(500);
+    } else {
+      console.log("Connection established with PostgreSQL server.");
+
+      // Requête SQL sauvegardant le score de l'utilisateur.
+      const sql = `INSERT INTO fredouil.historique (id_user, date_jeu, niveau_jeu, nb_reponses_corr, temps, score) SELECT DISTINCT id, NOW(), ${score.difficulty}, ${score.correctAnswers}, ${score.timeInSeconds}, ${score.score} FROM fredouil.users WHERE identifiant='${username}';`
+      console.log(sql);
+      client.query(sql, (err, res) => {
+        if (err) {
+          console.log("Error executing SQL query.\n\n" + err.stack);
+          response.sendStatus(500);
+        } else if (res.rowCount > 0) {
+          // Si un record a été inséré, on retourne un HTTP 200.
+          console.log(`Score de l'utilisateur '${username}' inséré avec succès.`);
+          response.status(200).send({ status: 'OK'})
+        } else {
+          console.log("No score log for this user.\n\n" + JSON.stringify(res));
+          response.sendStatus(500);
+        }
+      });
+      client.release();
+    }
+  });
+});
+
 app.get('/api/quiz', (request, response) => {
   mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
     if (err) {
@@ -274,10 +351,10 @@ app.get('/api/quiz/:quizId/questions', (request, response) => {
 
             if (request.query.difficulty) {
               let questionCount;
-              if (request.query.difficulty === 1) {
+              if (request.query.difficulty === '1') {
                 questionCount = 2;
               }
-              else if (request.query.difficulty === 2) {
+              else if (request.query.difficulty === '2') {
                 questionCount = 3
               }
               else {

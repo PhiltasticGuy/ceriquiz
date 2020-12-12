@@ -3,6 +3,9 @@ import { QuizService } from './quiz.service';
 import { Quiz, Question, DifficultyTypes } from './quiz';
 import { TimerComponent } from '../timer/timer.component';
 import { Router } from '@angular/router';
+import { ProfileService } from '../profile/profile.service';
+import { Score } from '../profile/profile';
+import LoginResponse from '../authentication/login-response';
 
 @Component({
   selector: 'app-quiz-picker',
@@ -14,7 +17,7 @@ export class QuizPickerComponent implements OnInit {
   public questions: Question[] = [];
   public quizId: string;
   public quizTheme: string;
-  public difficulty: DifficultyTypes;
+  public difficulty: string;
   public isQuizStarted = false;
   public isTimerRunning = false;
   public currentQuestionIndex: number;
@@ -25,7 +28,7 @@ export class QuizPickerComponent implements OnInit {
   public finalTime: string;
   public score: number = 0;
 
-  constructor(private quizService: QuizService, private router: Router) { }
+  constructor(private quizService: QuizService, private profileService: ProfileService, private router: Router) { }
 
   ngOnInit(): void {
     this.onResetQuizList();
@@ -37,13 +40,13 @@ export class QuizPickerComponent implements OnInit {
   }
 
   public displayDifficulty(): string {
-    if (this.difficulty === 1) {
+    if (this.difficulty === '1') {
       return 'Facile';
     }
-    else if (this.difficulty === 2) {
+    else if (this.difficulty === '2') {
       return 'Intermédiaire';
     }
-    else if (this.difficulty === 3) {
+    else if (this.difficulty === '3') {
       return 'Difficile';
     }
     else {
@@ -51,7 +54,7 @@ export class QuizPickerComponent implements OnInit {
     }
   }
 
-  public onStartQuiz(quizId: string, difficulty: DifficultyTypes): void {
+  public onStartQuiz(quizId: string, difficulty: string): void {
     this.quizService.getQuestionsByDifficulty(quizId, difficulty).subscribe((questions: Question[]) => {
       console.log(JSON.stringify(questions));
 
@@ -105,10 +108,10 @@ export class QuizPickerComponent implements OnInit {
     this.isQuizFinished = true;
 
     let difficultyBonus: number;
-    if (this.difficulty === 1) {
+    if (this.difficulty === '1') {
       difficultyBonus = 1.1;
     }
-    else if(this.difficulty === 2) {
+    else if(this.difficulty === '2') {
       difficultyBonus = 1.2;
     }
     else {
@@ -126,6 +129,17 @@ export class QuizPickerComponent implements OnInit {
     this.finalTime = timer.toString();
     this.score = Math.floor(((baseScore + timeBonus) * difficultyBonus) / 10) * 10;
 
+    const session: LoginResponse = JSON.parse(localStorage.getItem('session'));
+    const data = {
+      username: session.username,
+      date: new Date(),
+      difficulty: Number(this.difficulty),
+      correctAnswers: this.correctAnswers,
+      score: this.score,
+      timeInSeconds: totalSeconds
+    } as Score;
+    this.profileService.saveScore(data).subscribe();
+
     timer.reset();
   }
 
@@ -142,7 +156,7 @@ export class QuizPickerComponent implements OnInit {
     this.questions = [];
     this.quizId = undefined;
     this.quizTheme = undefined;
-    this.difficulty = 1;
+    this.difficulty = '1';
     this.isQuizStarted = false;
     this.isTimerRunning = false;
     this.currentQuestionIndex = undefined;

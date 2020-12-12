@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import Profile from './profile';
+import Profile, { Score } from './profile';
 import { map, tap, catchError } from 'rxjs/operators';
 
 @Injectable({
@@ -35,6 +35,23 @@ export class ProfileService {
     .pipe(
       tap(_ => console.log(`Processing update profile request for \'${profile.username}\'.`)),
       catchError(this.handleError('saveProfile', { } as Profile))
+    );
+  }
+
+  public getScoreLog(username: string): Observable<Score[]> {
+    return this.httpClient.get<Score[]>(`${this.profileApiUrl}/${username}/score`, this.httpOptions)
+      .pipe(
+        tap(_ => console.log(`Processing get score log request for \'${username}\'.`)),
+        catchError(this.handleError('getScoreLog', [] as Score[]))
+      );
+  }
+
+  public saveScore(score: Score): Observable<Score> {
+    const url = `${this.profileApiUrl}/${score.username}/score`;
+    return this.httpClient.post<Score>(url, score, this.httpOptions)
+    .pipe(
+      tap(_ => console.log(`Processing save score request for username \'${score.username}\'.`)),
+      catchError(this.handleError('saveScore', {} as Score))
     );
   }
 

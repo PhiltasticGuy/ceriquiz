@@ -117,15 +117,14 @@ export class QuizPickerComponent implements OnInit {
 
     // Score de base.
     const baseScore = (this.correctAnswers * 500);
-    const correctAnswerRatio = this.correctAnswers / this.questions.length;
 
     // 100 points bonus par seconde sous la barre des 7 secondes par question, sinon zéro.
     const totalSeconds = (timer.timerValue.hours * 3600 + timer.timerValue.minutes * 60 + timer.timerValue.seconds + timer.timerValue.milliseconds / 100);
-    const timeBonusThreshold = this.questions.length * 7;
+    const timeBonusThreshold = this.correctAnswers * 7;
     const timeBonus = (timeBonusThreshold - totalSeconds > 0 && this.correctAnswers > 0 ? (timeBonusThreshold - totalSeconds) * 100 : 0);
 
     this.finalTime = timer.toString();
-    this.score = Math.floor(((baseScore + timeBonus * correctAnswerRatio) * difficultyBonus) / 10) * 10;
+    this.score = Math.floor(((baseScore + timeBonus) * difficultyBonus) / 10) * 10;
 
     timer.reset();
   }

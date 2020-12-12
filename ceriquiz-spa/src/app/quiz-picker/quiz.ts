@@ -12,7 +12,7 @@ export interface Question {
   funFact: string;
 }
 
-export type DifficultyTypes = 'easy' | 'medium' | 'hard';
+export type DifficultyTypes = 1 | 2 | 3;
 
 export interface CorrectAnswer {
   answer: string;

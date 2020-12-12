@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { QuizService } from './quiz.service';
 import { Quiz, Question, DifficultyTypes } from './quiz';
 import { TimerComponent } from '../timer/timer.component';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-quiz-picker',
@@ -19,13 +20,15 @@ export class QuizPickerComponent implements OnInit {
   public currentQuestionIndex: number;
   public selectedAnswer: number;
   public correctAnswer: number;
+  public isQuizFinished = false;
+  public correctAnswers: number = 0;
+  public finalTime: string;
+  public score: number = 0;
 
-  constructor(private quizService: QuizService) { }
+  constructor(private quizService: QuizService, private router: Router) { }
 
   ngOnInit(): void {
-    this.quizService.getQuizList().subscribe((quizList: Quiz[]) => {
-      this.quizList = quizList;
-    });
+    this.onResetQuizList();
   }
 
   public onClick(quiz: Quiz): void {
@@ -34,13 +37,13 @@ export class QuizPickerComponent implements OnInit {
   }
 
   public displayDifficulty(): string {
-    if (this.difficulty === 'easy') {
+    if (this.difficulty === 1) {
       return 'Facile';
     }
-    else if (this.difficulty === 'medium') {
+    else if (this.difficulty === 2) {
       return 'Intermédiaire';
     }
-    else if (this.difficulty === 'hard') {
+    else if (this.difficulty === 3) {
       return 'Difficile';
     }
     else {
@@ -51,7 +54,7 @@ export class QuizPickerComponent implements OnInit {
   public onStartQuiz(quizId: string, difficulty: DifficultyTypes): void {
     this.quizService.getQuestionsByDifficulty(quizId, difficulty).subscribe((questions: Question[]) => {
       console.log(JSON.stringify(questions));
-      
+
       this.questions = questions;
       this.currentQuestionIndex = 0;
       this.isQuizStarted = true;
@@ -66,12 +69,12 @@ export class QuizPickerComponent implements OnInit {
     this.difficulty = undefined;
   }
 
-  public checkQuizStarted(timer: TimerComponent): boolean {
+  public checkQuizStarted(): boolean {
     this.isTimerRunning = true;
     return this.isQuizStarted;
   }
 
-  public onCheckAnswer(quizId: string, questionIndex: number, answerKey: number, timer: TimerComponent): void {
+  public onCheckAnswer(quizId: string, questionIndex: number, answerKey: number): void {
     this.isTimerRunning = false;
 
     this.quizService
@@ -83,10 +86,14 @@ export class QuizPickerComponent implements OnInit {
       console.log('Is correct answer? ' + (value.answer === this.questions[questionIndex].options[answerKey]));
       this.correctAnswer = this.questions[questionIndex].options.indexOf(value.answer);
       this.selectedAnswer = answerKey;
+
+      if (value.answer === this.questions[questionIndex].options[answerKey]) {
+        this.correctAnswers++;
+      }
     });
   }
 
-  public onNextQuestion(timer: TimerComponent): void {
+  public onNextQuestion(): void {
     this.currentQuestionIndex++;
     this.selectedAnswer = undefined;
     this.correctAnswer = undefined;
@@ -95,11 +102,60 @@ export class QuizPickerComponent implements OnInit {
   }
 
   public onViewResults(timer: TimerComponent): void {
-    this.isTimerRunning = false;
+    this.isQuizFinished = true;
+
+    let difficultyBonus: number;
+    if (this.difficulty === 1) {
+      difficultyBonus = 1.1;
+    }
+    else if(this.difficulty === 2) {
+      difficultyBonus = 1.2;
+    }
+    else {
+      difficultyBonus = 1.3;
+    }
+
+    // Score de base.
+    const baseScore = (this.correctAnswers * 500);
+    const correctAnswerRatio = this.correctAnswers / this.questions.length;
+
+    // 100 points bonus par seconde sous la barre des 7 secondes par question, sinon zéro.
+    const totalSeconds = (timer.timerValue.hours * 3600 + timer.timerValue.minutes * 60 + timer.timerValue.seconds + timer.timerValue.milliseconds / 100);
+    const timeBonusThreshold = this.questions.length * 7;
+    const timeBonus = (timeBonusThreshold - totalSeconds > 0 && this.correctAnswers > 0 ? (timeBonusThreshold - totalSeconds) * 100 : 0);
+
+    this.finalTime = timer.toString();
+    this.score = Math.floor(((baseScore + timeBonus * correctAnswerRatio) * difficultyBonus) / 10) * 10;
+
+    timer.reset();
   }
 
   public toQuestionNumber(key: string): number {
     return Number(key) + 1;
   }
 
+  public onGoToDashboard(): void {
+    this.router.navigate(['dashboard']);
+  }
+
+  public onResetQuizList(): void {
+    this.quizList = [];
+    this.questions = [];
+    this.quizId = undefined;
+    this.quizTheme = undefined;
+    this.difficulty = 1;
+    this.isQuizStarted = false;
+    this.isTimerRunning = false;
+    this.currentQuestionIndex = undefined;
+    this.selectedAnswer = undefined;
+    this.correctAnswer = undefined;
+    this.isQuizFinished = false;
+    this.correctAnswers = 0;
+    this.finalTime = undefined;
+    this.score = 0;
+
+    this.quizService.getQuizList().subscribe((quizList: Quiz[]) => {
+      this.quizList = quizList;
+    });
+  }
 }

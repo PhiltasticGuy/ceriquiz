@@ -1,5 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { timer } from 'rxjs';
+import { DecimalPipe } from '@angular/common';
 
 interface TimerValue {
   milliseconds: number;
@@ -25,7 +26,7 @@ export class TimerComponent implements OnInit {
   @Input()
   public toggle: boolean;
 
-  constructor() { }
+  constructor(private numberPipe: DecimalPipe) { }
 
   ngOnInit(): void {
     timer(0, 10).subscribe(ellapsedCycles => {
@@ -39,6 +40,20 @@ export class TimerComponent implements OnInit {
         };
       }
     });
+  }
+
+  public toString(): string {
+    return `${this.numberPipe.transform(this.timerValue.hours, '2.0-0')}:${this.numberPipe.transform(this.timerValue.minutes, '2.0-0')}:${this.numberPipe.transform(this.timerValue.seconds, '2.0-0')}.${this.numberPipe.transform(this.timerValue.milliseconds, '2.0-0')}`;
+  }
+
+  public reset(): void {
+    this.ticks = 0;
+    this.timerValue = {
+      milliseconds: 0,
+      seconds: 0,
+      minutes: 0,
+      hours: 0
+    };
   }
 
 }

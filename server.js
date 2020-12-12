@@ -274,10 +274,10 @@ app.get('/api/quiz/:quizId/questions', (request, response) => {
 
             if (request.query.difficulty) {
               let questionCount;
-              if (request.query.difficulty === 'easy') {
+              if (request.query.difficulty === 1) {
                 questionCount = 2;
               }
-              else if (request.query.difficulty === 'medium') {
+              else if (request.query.difficulty === 2) {
                 questionCount = 3
               }
               else {

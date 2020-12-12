@@ -1,14 +1,5 @@
 <h1>DASHBOARD</h1>
 
-<div class="row">
-  <div class="col-sm-6">
-    <p>Score: 1000</p>
-  </div>
-  <div class="col-sm-6 text-right">
-    <app-timer></app-timer>
-  </div>
-</div>
-
 <p *ngIf="isAuthenticated">
   Cette page affichera le contenu destiné aux utilisateurs connectés! Les liens du menu doivent aussi être
   modifiés afin d'utiliser router au lieu de faire des HTTP GET puisqu'on est dans un application SPA.

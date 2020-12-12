@@ -20,15 +20,28 @@ export class AuthenticationService {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })
   };
 
-  constructor(private httpClient: HttpClient, private notificationService: NotificationService) {
+  private isLocalStorageSessionStillValid(): boolean {
     const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
-    const isAuthenticated = data?.authenticated;
 
-    this.authenticated = new BehaviorSubject<boolean>(isAuthenticated);
+    // Créer une nouvelle date contenant le timestamp d'expiration de la 
+    // session (1h).
+    const limit = new Date(data.newLoginDate);
+    limit.setHours(new Date(data.newLoginDate).getHours() + 1);
+    const now = new Date();
 
-    // Lorsque l'application est lancée initialement, l'utilisateur n'est pas
-    // connecté. On affiche alors un message l'invitant à se connecter.
-    if (!isAuthenticated) {
+    // Troubleshooting...
+    console.log(`The localStorage session is '${limit > now}'. (${limit} vs ${now})`);
+
+    return (limit > now) && data.authenticated;
+  }
+
+  constructor(private httpClient: HttpClient, private notificationService: NotificationService) {
+    const isLocallyAuthenticated = this.isLocalStorageSessionStillValid();
+    this.authenticated = new BehaviorSubject<boolean>(isLocallyAuthenticated);
+
+    // Lorsque l'application est lancée initialement, si l'utilisateur n'est pas
+    // connecté, on affiche alors un message l'invitant à se connecter.
+    if (!isLocallyAuthenticated) {
       this.notificationService.add(
         false,
         'info',

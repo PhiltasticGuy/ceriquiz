@@ -30,18 +30,18 @@ export class ProfileComponent implements OnInit {
     });
   }
 
-  public formatDate(value: Date): string {
-    return value.toLocaleString('fr', { year: 'numeric', month: 'numeric', day: 'numeric' });
-  }
-
-  public setBirthday(value: any): void {
-    this.profile.dateBirth = new Date(value);
-  }
-
+  /**
+   * Basculer l'écran en mode édition de profil.
+   */
   public startEditing(): void {
     this.isEditing = true;
   }
 
+  /**
+   * Sauvegarder les mises à jour au profil de l'utilisateur.
+   *
+   * @param f: Formulaire avec les données entrées par l'utilisateur.
+   */
   public saveProfile(f: NgForm): void {
     if (f.valid) {
       // Remettre la valeur dans le profil de l'utilisateur.
@@ -62,16 +62,25 @@ export class ProfileComponent implements OnInit {
     }
   }
 
+  /**
+   * Rebasculer l'écran en mode affichage de profil seulement.
+   */
   public cancel(): void {
-    // Basculer en mode affichage seulement.
     this.isEditing = false;
 
+    // Rafraîchir la page avec l'information de la base de données.
     this.profileService.getProfile(this.profile.username).subscribe(value => {
       this.profile = value;
       this.tempAvatarUrl = this.profile.avatarUrl;
     });
   }
 
+  /**
+   * Transformation du niveau de difficulté pour l'affichage.
+   *
+   * @param difficulty: Niveau de difficulté.
+   * @returns: Niveau de difficulté formatté.
+   */
   public displayDifficulty(difficulty: DifficultyTypes): string {
     if (difficulty === 1) {
       return 'Facile';
@@ -85,6 +94,25 @@ export class ProfileComponent implements OnInit {
     else {
       return '';
     }
+  }
+
+  /**
+   * Transformation d'une date pour l'affichage.
+   *
+   * @param value: Date.
+   * @returns: Date formattée.
+   */
+  public formatDate(value: Date): string {
+    return value.toLocaleString('fr', { year: 'numeric', month: 'numeric', day: 'numeric' });
+  }
+
+  /**
+   * Assigner la date du formulaire au modèle avec le bon format.
+   *
+   * @param value: Date.
+   */
+  public setBirthday(value: any): void {
+    this.profile.dateBirth = new Date(value);
   }
 
 }

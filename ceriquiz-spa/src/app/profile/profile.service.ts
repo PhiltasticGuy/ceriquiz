@@ -18,6 +18,12 @@ export class ProfileService {
 
   constructor(private httpClient: HttpClient) { }
 
+  /**
+   * Charger le profil de l'utilisateur.
+   *
+   * @param username: Identifiant de l'utilisateur.
+   * @returns: Observable du profil de l'utilisateur.
+   */
   public getProfile(username: string): Observable<Profile> {
     return this.httpClient.get<Profile>(`${this.profileApiUrl}/${username}`, this.httpOptions)
       .pipe(
@@ -30,14 +36,27 @@ export class ProfileService {
       );
   }
 
+  /**
+   * Modifier le profil de l'utilisateur.
+   *
+   * @param profile: Profil modifié de l'utilisateur.
+   * @returns: Observable du profil de l'utilisateur modifié.
+   */
   public saveProfile(profile: Profile): Observable<Profile> {
     return this.httpClient.put<Profile>(`${this.profileApiUrl}/${profile.username}`, profile, this.httpOptions)
     .pipe(
       tap(_ => console.log(`Processing update profile request for \'${profile.username}\'.`)),
-      catchError(this.handleError('saveProfile', { } as Profile))
+      catchError(this.handleError('saveProfile', {} as Profile))
     );
   }
 
+  /**
+   * Charger l'historique des scores de l'utilisateur.
+   *
+   * @param username: Identifiant de l'utilisateur.
+   * @returns: Observable de l'historique des scores.
+   */
+  // TODO: Imbriquer cette information dans la fonction getProfile()?
   public getScoreLog(username: string): Observable<Score[]> {
     return this.httpClient.get<Score[]>(`${this.profileApiUrl}/${username}/score`, this.httpOptions)
       .pipe(
@@ -46,6 +65,12 @@ export class ProfileService {
       );
   }
 
+  /**
+   * Sauvegarder un score de l'utilisateur dans son historique.
+   *
+   * @param score: Score pour une partie de quiz.
+   * @returns: Observable du score sauvegardé.
+   */
   public saveScore(score: Score): Observable<Score> {
     const url = `${this.profileApiUrl}/${score.username}/score`;
     return this.httpClient.post<Score>(url, score, this.httpOptions)

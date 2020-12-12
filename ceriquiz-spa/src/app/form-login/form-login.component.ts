@@ -27,6 +27,7 @@ export class FormLoginComponent implements OnInit {
     if (f.valid) {
       // S'enregistrer aux updates de l'état de l'authentification.
       this.authenticationService.login(f.value as LoginRequest).subscribe(value => {
+        console.log(value);
         // Après une connexion réussie, vider le formulaire pour permettre une
         // reconnexion suite à une déconnexion.
         if (value) {

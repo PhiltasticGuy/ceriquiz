@@ -3,10 +3,6 @@
   <h2>{{ profile.username }}</h2>
 
   <div class="row justify-content-center mb-3">
-    <!-- <img src="{{ (profile.avatarUrl === 'assets/question-mark.jpg' ? profile.avatarUrl : temp) }}" class="rounded-circle" width="200" height="200"
-        (error)="profile.avatarUrl = 'assets/question-mark.jpg'"
-        alt="Photo de profil pour {{ profile.firstname + ' ' + profile.lastname }}."
-        title="Photo de profil pour {{ profile.firstname + ' ' + profile.lastname }}."> -->
       <img src="{{ profile.avatarUrl }}" class="rounded-circle" width="200" height="200"
       (error)="profile.avatarUrl = 'assets/question-mark.jpg'"
       alt="Photo de profil pour {{ profile.firstname + ' ' + profile.lastname }}."

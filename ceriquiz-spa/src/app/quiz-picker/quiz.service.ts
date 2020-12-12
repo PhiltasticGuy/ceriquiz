@@ -18,6 +18,11 @@ export class QuizService {
 
   constructor(private httpClient: HttpClient) { }
 
+  /**
+   * Charger la liste des quiz.
+   *
+   * @returns: Observable de la liste des quiz.
+   */
   public getQuizList(): Observable<Quiz[]> {
     const url = `${this.quizApiUrl}`;
     return this.httpClient.get<Quiz[]>(url, this.httpOptions)
@@ -27,15 +32,13 @@ export class QuizService {
     );
   }
 
-  public getQuestions(quizId: string): Observable<Question[]> {
-    const url = `${this.quizApiUrl}/${quizId}/questions`;
-    return this.httpClient.get<Question[]>(url, this.httpOptions)
-    .pipe(
-      tap(_ => console.log(`Processing get questions request for quiz \'${quizId}\'.`)),
-      catchError(this.handleError('getQuestions', [] as Question[]))
-    );
-  }
-
+  /**
+   * Charger la liste des questions pour une partie de quiz.
+   *
+   * @param quizId: Identifiant du quiz sélectionné.
+   * @param difficulty: Niveau de difficulté sélectionné.
+   * @returns: Observable de la liste de questions du quiz.
+   */
   public getQuestionsByDifficulty(quizId: string, difficulty: string): Observable<Question[]> {
     const url = `${this.quizApiUrl}/${quizId}/questions?difficulty=${difficulty}`;
     return this.httpClient.get<Question[]>(url, this.httpOptions)
@@ -45,12 +48,19 @@ export class QuizService {
     );
   }
 
-  public checkAnswer(quizId: string, questionId: number, answer: string): Observable<CorrectAnswer> {
-    const url = `${this.quizApiUrl}/${quizId}/questions/${questionId}?answer=${encodeURI(answer)}`;
+  /**
+   * Charger la réponse correcte pour une question spécifique d'un quiz.
+   *
+   * @param quizId: Identifiant du quiz sélectionné.
+   * @param questionId: Identifiant de la question actuelle du quiz.
+   * @returns: Observable de la réponse correcte.
+   */
+  public getCorrectAnswer(quizId: string, questionId: number): Observable<CorrectAnswer> {
+    const url = `${this.quizApiUrl}/${quizId}/questions/${questionId}}`;
     return this.httpClient.get<CorrectAnswer>(url, this.httpOptions)
     .pipe(
-      tap(_ => console.log(`Processing check answer request for quiz \'${quizId}\', question \'${questionId}\' and answer \'${answer}\'.`)),
-      catchError(this.handleError('checkAnswer', {} as CorrectAnswer))
+      tap(_ => console.log(`Processing get correct answer request for quiz \'${quizId}\' and question \'${questionId}\'.`)),
+      catchError(this.handleError('getCorrectAnswer', {} as CorrectAnswer))
     );
   }
 

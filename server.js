@@ -85,7 +85,8 @@ app.post("/api/auth/login", function (request, response) {
     if (err) {
       console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
       response.sendStatus(500);
-    } else {
+    }
+    else {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL retournant le mot de passe hashé de l'utilisateur.
@@ -101,7 +102,8 @@ app.post("/api/auth/login", function (request, response) {
         if (err) {
           console.log("Error executing SQL query.\n\n" + err.stack);
           response.sendStatus(500);
-        } else if (res.rows.length > 0 && res.rows[0].motpasse == hashedPassword) {
+        }
+        else if (res.rows.length > 0 && res.rows[0].motpasse == hashedPassword) {
           // Créer la session pour cet utilisateur valide.
           let data = {
             authenticated: true,
@@ -120,7 +122,8 @@ app.post("/api/auth/login", function (request, response) {
 
           // Terminer la requête en retournant le data.
           response.send(request.session.user);
-        } else {
+        }
+        else {
           console.log("Invalid user credentials.");
           response.sendStatus(401);
         }
@@ -131,7 +134,7 @@ app.post("/api/auth/login", function (request, response) {
 });
 
 app.get("/api/profile/:username", function (request, response) {
-  console.log(JSON.stringify(request.session.user));
+  console.log('request.session: ' + JSON.stringify(request.session));
 
   // Extraire l'information de la requête HTTP afin de la traiter.
   const username = request.params.username;
@@ -140,7 +143,8 @@ app.get("/api/profile/:username", function (request, response) {
     if (err) {
       console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
       response.sendStatus(500);
-    } else {
+    } 
+    else {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL retournant le mot de passe hashé de l'utilisateur.
@@ -150,7 +154,8 @@ app.get("/api/profile/:username", function (request, response) {
         if (err) {
           console.log("Error executing SQL query.\n\n" + err.stack);
           response.sendStatus(500);
-        } else if (res.rows.length > 0) {
+        }
+        else if (res.rows.length > 0) {
           // Créer la session pour cet utilisateur valide.
           const data = {
             username: res.rows[0].identifiant,
@@ -161,11 +166,11 @@ app.get("/api/profile/:username", function (request, response) {
             status: res.rows[0].humeur,
             isConnected: (res.rows[0].statut_connexion === 1)
           };
-          // request.session.user = data;
 
           // Terminer la requête en retournant le data.
           response.send(data);
-        } else {
+        }
+        else {
           console.log("User does not exist.");
           response.sendStatus(500);
         }
@@ -183,25 +188,25 @@ app.put("/api/profile/:username", function(request, response) {
     if (err) {
       console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
       response.sendStatus(500);
-    } else {
+    }
+    else {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL retournant le mot de passe hashé de l'utilisateur.
       // const sql = `UPDATE fredouil.users SET nom='${profile.lastname}', prenom='${profile.firstname}', date_naissance='${profile.dateBirth}', avatar='${profile.avatarUrl}', humeur='${profile.status}' WHERE identifiant='${username}';`;
       const sql = `UPDATE fredouil.users SET avatar='${profile.avatarUrl}', humeur='${profile.status}' WHERE identifiant='${username}';`;
 
-      // Log pour le troubleshooting de commande SQL.
-      // console.log(sql);
-
       client.query(sql, (err, res) => {
         if (err) {
           console.log("Error executing SQL query.\n\n" + err.stack);
           response.sendStatus(500);
-        } else if (res.rowCount > 0) {
+        }
+        else if (res.rowCount > 0) {
           // Si un record a été modifié, on retourne un HTTP 200.
           console.log(`Utilisateur '${username}' modifié avec succès.`);
           response.status(200).send({ status: 'OK'})
-        } else {
+        }
+        else {
           console.log("User does not exist.");
           response.sendStatus(500);
         }
@@ -212,7 +217,7 @@ app.put("/api/profile/:username", function(request, response) {
 });
 
 app.get("/api/profile/:username/score", function (request, response) {
-  console.log(JSON.stringify(request.session.user));
+  console.log('request.session: ' + JSON.stringify(request.session));
 
   // Extraire l'information de la requête HTTP afin de la traiter.
   const username = request.params.username;
@@ -221,7 +226,8 @@ app.get("/api/profile/:username/score", function (request, response) {
     if (err) {
       console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
       response.sendStatus(500);
-    } else {
+    }
+    else {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL retournant l'historique des scores de l'utilisateur.
@@ -231,7 +237,9 @@ app.get("/api/profile/:username/score", function (request, response) {
         if (err) {
           console.log("Error executing SQL query.\n\n" + err.stack);
           response.sendStatus(500);
-        } else if (res.rows.length > 0) {
+        }
+        else if (res.rows.length > 0) {
+          // Mapping des noms de colonne de la BD à l'interface TypeScript.
           const data = res.rows.map(x => ({
             username: username,
             date: x.date_jeu,
@@ -243,7 +251,8 @@ app.get("/api/profile/:username/score", function (request, response) {
 
           // Terminer la requête en retournant le data.
           response.send(data);
-        } else {
+        }
+        else {
           console.log("No score log for this user.");
           response.sendStatus(500);
         }
@@ -254,7 +263,7 @@ app.get("/api/profile/:username/score", function (request, response) {
 });
 
 app.post("/api/profile/:username/score", function (request, response) {
-  console.log(JSON.stringify(request.session.user));
+  console.log('request.session: ' + JSON.stringify(request.session));
 
   // Extraire l'information de la requête HTTP afin de la traiter.
   const username = request.params.username;
@@ -264,7 +273,8 @@ app.post("/api/profile/:username/score", function (request, response) {
     if (err) {
       console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
       response.sendStatus(500);
-    } else {
+    }
+    else {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL sauvegardant le score de l'utilisateur.
@@ -274,11 +284,13 @@ app.post("/api/profile/:username/score", function (request, response) {
         if (err) {
           console.log("Error executing SQL query.\n\n" + err.stack);
           response.sendStatus(500);
-        } else if (res.rowCount > 0) {
+        }
+        else if (res.rowCount > 0) {
           // Si un record a été inséré, on retourne un HTTP 200.
           console.log(`Score de l'utilisateur '${username}' inséré avec succès.`);
           response.status(200).send({ status: 'OK'})
-        } else {
+        }
+        else {
           console.log("No score log for this user.\n\n" + JSON.stringify(res));
           response.sendStatus(500);
         }
@@ -295,18 +307,22 @@ app.get('/api/quiz', (request, response) => {
       response.sendStatus(500);
     }
     else if (mongoClient) {
-      mongoClient.db().collection('quizz').find().project({
+      mongoClient.db().collection('quizz').find()
+      // Projection des données pour ne sélectionner que quelques champs.
+      .project({
         "_id": 1,
         "fournisseur": 1,
         "rédacteur": 1,
         "thème": 1
       })
+      // Mapping des noms de colonne de la BD à l'interface TypeScript.
       .map(q => ({
         id: q._id,
         provider: q.fournisseur,
         writer: q.rédacteur,
         theme: q.thème
-      })).toArray(function (err, data) {
+      }))
+      .toArray(function (err, data) {
         if (err) {
           console.log("Error executing query on MongoDB server.\n\n" + err.stack);
           response.sendStatus(500);
@@ -329,12 +345,14 @@ app.get('/api/quiz/:quizId/questions', (request, response) => {
     else if (mongoClient) {
       mongoClient.db().collection('quizz').findOne(
         { "_id": new mongo.ObjectId(request.params.quizId) },
+        // Projection des données pour ne sélectionner que quelques champs.
         { projection: {
           "_id": 0,
           "quizz.id": 1,
           "quizz.question": 1,
           "quizz.propositions": 1,
-          "quizz.anecdote": 1
+          "quizz.anecdote": 1,
+          "quizz.réponse": 1
         }},
         function (err, data) {
           if (err) {
@@ -342,37 +360,80 @@ app.get('/api/quiz/:quizId/questions', (request, response) => {
             response.sendStatus(500);
           }
           else if(data) {
-            const quiz = data.quizz.map(q => ({
-              id: q.id,
-              question: q.question,
-              options: q.propositions,
-              funFact: q.anecdote
-            }));
-
+            // Si le niveau de difficulté est spécifié, filtrer les options.
             if (request.query.difficulty) {
-              let questionCount;
+              // Nombre de questions fixe par partie jouée.
+              const questionCount = 5;
+
+              // Déterminer le nombre d'options à choisir.
+              let optionsCount;
               if (request.query.difficulty === '1') {
-                questionCount = 2;
+                optionsCount = 2;
               }
               else if (request.query.difficulty === '2') {
-                questionCount = 3
+                optionsCount = 3
               }
               else {
-                questionCount = 4;
+                optionsCount = 4;
               }
   
+              // Construire une liste de X questions pour le quiz.
               let finalCut = [];
               while (finalCut.length < questionCount) {
-                const random = quiz[Math.floor(Math.random() * quiz.length)];
+                // Choisir une question aléatoire.
+                const random = data.quizz[Math.floor(Math.random() * data.quizz.length)];
   
                 if (!finalCut.some(e => e.id === random.id)) {
+                  // Choisir un index aléatoire pour la réponse.
+                  const answerIndex = Math.floor(Math.random() * optionsCount);
+
+                  // Construire une liste de X options pour la question.
+                  let optionsCut = [];
+                  while (optionsCut.length < optionsCount) {
+                    // Si la réponse n'est pas déjà dans la liste et qu'on est à
+                    // l'index aléatoire choisi pour la réponse...
+                    if (random.réponse && answerIndex == optionsCut.length && !optionsCut.includes(random.réponse)) {
+                      optionsCut.push(random.réponse);
+                    }
+                    // Sinon, ajouter une option aléatoire.
+                    else {
+                      // Choisir une option aléatoire.
+                      const randomOption = random.propositions[Math.floor(Math.random() * random.propositions.length)];
+                      
+                      // Si l'option n'est pas déjà dans la liste, ajouter l'option.
+                      if (!optionsCut.includes(randomOption)) {
+                        optionsCut.push(randomOption);
+                      }
+                    }
+                  }
+
+                  // Remplacer la liste d'options originale par notre liste
+                  // filtrée et aléatoire.
+                  random.propositions = optionsCut;
+
                   finalCut.push(random);
                 }
               }
+
+              // Mapping des noms de colonne de la BD à l'interface TypeScript.
+              const quiz = finalCut.map(q => ({
+                id: q.id,
+                question: q.question,
+                options: q.propositions,
+                funFact: q.anecdote
+              }));
               
-              response.send(finalCut);
+              response.send(quiz);
             }
+            // Sinon, retourner toutes les options.
             else {
+              // Mapping des noms de colonne de la BD à l'interface TypeScript.
+              const quiz = data.quizz.map(q => ({
+                id: q.id,
+                question: q.question,
+                options: q.propositions,
+                funFact: q.anecdote
+              }));
               response.send(quiz);
             }
           }
@@ -390,14 +451,18 @@ app.get('/api/quiz/:quizId/questions/:questionId', (request, response) => {
       response.sendStatus(500);
     }
     else if (mongoClient) {
+      // Pipeline d'aggrégation permettant de sélectionner que le champs réponse
+      // d'une question.
       const pipeline = [
         { "$match": { '_id': new mongo.ObjectID(request.params.quizId) } },
         { "$unwind": "$quizz" },
         { "$match": { "quizz.id": parseInt(request.params.questionId) } },
+        // Projection des données pour ne sélectionner que quelques champs.
         { "$project": { "_id": 0, "réponse": "$quizz.réponse" } }
       ];
       const aggCursor = mongoClient.db().collection("quizz")
-        .aggregate(pipeline).toArray(function (err, data) {
+        .aggregate(pipeline)
+        .toArray(function (err, data) {
           if (err) {
             console.log("Error executing query on MongoDB server.\n\n" + err.stack);
             response.sendStatus(500);
@@ -409,9 +474,7 @@ app.get('/api/quiz/:quizId/questions/:questionId', (request, response) => {
 
             // Si le tableau contenait au moins un élément...
             if (first) {
-              console.log("Check answer: " + JSON.stringify(first));
-
-              // Comparer cet élément à notre question.
+              console.log(`Correct answer for question '${request.params.questionId}' in quiz '${request.params.quizId}': ${JSON.stringify(first)}`);
               response.send(first);
             }
             else {

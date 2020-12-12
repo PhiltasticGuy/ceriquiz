@@ -105,7 +105,7 @@ export class QuizPickerComponent implements OnInit {
     // Réinitializer les choix d'options pour la partie de quiz.
     this.quizId = undefined;
     this.quizTheme = undefined;
-    this.difficulty = undefined;
+    this.difficulty = '1';
   }
 
   /**

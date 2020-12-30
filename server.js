@@ -37,7 +37,6 @@ const dsnMongoDb = "mongodb://127.0.0.1:27017/db";
 // Configuration des sessions sur MongoDB.
 var store = new MongoDBStore({
   uri: dsnMongoDb,
-  // uri: "mongodb://localhost:27017/db",
   collection: "mySessions3022",
   touchAfter: 24 * 3600
 });

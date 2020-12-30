@@ -175,7 +175,7 @@ export class QuizPickerComponent implements OnInit {
    */
   private calculateScore(timer: TimerComponent): Score {
     // Score de base.
-    const baseScore = (this.correctAnswers * 500);
+    const baseScore = (this.correctAnswers * 750);
 
     // Score bonus pour le temps.
     // 100 points bonus par seconde sous la barre des 7 secondes par question, sinon zéro.

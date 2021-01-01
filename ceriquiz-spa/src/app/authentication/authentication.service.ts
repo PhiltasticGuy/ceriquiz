@@ -6,13 +6,15 @@ import { catchError, tap } from 'rxjs/operators';
 import LoginRequest from '../models/login-request';
 import LoginResponse from '../models/login-response';
 import { NotificationService } from '../notifications/notification.service';
+import { io, Socket } from 'socket.io-client';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
-  // private authApiUrl = 'http://pedago.univ-avignon.fr:3021/api/auth/login';
-  private authApiUrl = 'http://127.0.0.1:3021/api/auth/login';
+  // private baseUrl = 'http://pedago.univ-avignon.fr:3021';
+  private baseUrl = 'http://127.0.0.1:3021';
+  private authApiUrl = `${this.baseUrl}/api/auth/login`;
   private authenticated: BehaviorSubject<boolean>;
 
   // Options pour les HTTP Headers utilisées lors des requêtes HTTP.
@@ -20,22 +22,31 @@ export class AuthenticationService {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })
   };
 
+  private socket: Socket;
+
   private isLocalStorageSessionStillValid(): boolean {
     const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
 
-    // Créer une nouvelle date contenant le timestamp d'expiration de la 
-    // session (1h).
-    const limit = new Date(data.newLoginDate);
-    limit.setHours(new Date(data.newLoginDate).getHours() + 1);
-    const now = new Date();
+    if (data) {
+      // Créer une nouvelle date contenant le timestamp d'expiration de la 
+      // session (1h).
+      const limit = new Date(data.newLoginDate);
+      limit.setHours(new Date(limit).getHours() + 1);
+      const now = new Date();
 
-    // Troubleshooting...
-    console.log(`The localStorage session is '${limit > now}'. (${limit} vs ${now})`);
+      // Troubleshooting...
+      console.log(`The localStorage session is '${limit > now}'. (${limit} vs ${now})`);
 
-    return (limit > now) && data.authenticated;
+      return (limit > now) && data.authenticated; 
+    }
+    else {
+      return false;
+    }
   }
 
   constructor(private httpClient: HttpClient, private notificationService: NotificationService) {
+    this.socket = io(this.baseUrl);
+
     const isLocallyAuthenticated = this.isLocalStorageSessionStillValid();
     this.authenticated = new BehaviorSubject<boolean>(isLocallyAuthenticated);
 
@@ -97,6 +108,8 @@ export class AuthenticationService {
       'info',
       'Connectez-vous afin de jouer une partie!'
     );
+
+    this.socket.emit('playerDisconnected', data.id);
 
     // Avertir les subscribers que l'utilisateur n'est plus connecté.
     this.setAuthenticated(false);

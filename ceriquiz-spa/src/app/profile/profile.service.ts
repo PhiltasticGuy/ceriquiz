@@ -1,31 +1,53 @@
-import { Injectable } from '@angular/core';
+import { Injectable, ComponentFactoryResolver } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of, BehaviorSubject } from 'rxjs';
+import { Observable, of, BehaviorSubject, Subscriber } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import Profile from '../models/profile';
 import Score from '../models/score';
 import RankedPlayer from '../models/ranked-player';
 import { Player } from '../models/player';
+import { io, Socket } from 'socket.io-client';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfileService {
-  // private profileApiUrl = 'http://pedago.univ-avignon.fr:3021/api/profile';
-  private profileApiUrl = 'http://127.0.0.1:3021/api/profile';
-  private playersApiUrl = 'http://127.0.0.1:3021/api/players';
+  // private baseUrl = 'http://pedago.univ-avignon.fr:3021';
+  private baseUrl = 'http://127.0.0.1:3021';
+  private profileApiUrl = `${this.baseUrl}/api/profile`;
+  private playersApiUrl = `${this.baseUrl}/api/players`;
 
   // Options pour les HTTP Headers utilisées lors des requêtes HTTP.
   private readonly httpOptions = {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })
   };
 
+  private socket: Socket;
   private top10Players: BehaviorSubject<RankedPlayer[]>;
   private onlinePlayers: BehaviorSubject<Player[]>;
 
   constructor(private httpClient: HttpClient) {
+    this.socket = io(this.baseUrl);
     this.top10Players = new BehaviorSubject<RankedPlayer[]>([]);
     this.onlinePlayers = new BehaviorSubject<Player[]>([]);
+
+    this.socket.on('top10Updated', (data: RankedPlayer[]) => {
+      console.log(`top10Updated.data = ${JSON.stringify(data)}`);
+      this.setTop10Players(data);
+    });
+
+    this.socket.on('playerConnected', (data: Player) => {
+      console.log(`playerConnected.data = ${JSON.stringify(data)}`);
+      this.onlinePlayers.value.push(data);
+      this.onlinePlayers.value.sort((a, b) => a.username.localeCompare(b.username));
+      this.setOnlinePlayers(this.onlinePlayers.value);
+    });
+
+    this.socket.on('playerDisconnected', (data: number) => {
+      console.log(`playerDisconnected.data = ${JSON.stringify(data)}`);
+      const filtered = this.onlinePlayers.value.filter(obj => obj.id !== data);
+      this.setOnlinePlayers(filtered);
+    });
   }
 
   /**
@@ -63,14 +85,14 @@ export class ProfileService {
   /**
    * Charger l'historique des scores de l'utilisateur.
    *
-   * @param username: Identifiant de l'utilisateur.
+   * @param userId: Id de l'utilisateur.
    * @returns: Observable de l'historique des scores.
    */
   // TODO: Imbriquer cette information dans la fonction getProfile()?
-  public getScoreLog(username: string): Observable<Score[]> {
-    return this.httpClient.get<Score[]>(`${this.profileApiUrl}/${username}/score`, this.httpOptions)
+  public getScoreLog(userId: number): Observable<Score[]> {
+    return this.httpClient.get<Score[]>(`${this.profileApiUrl}/${userId}/score`, this.httpOptions)
       .pipe(
-        tap(_ => console.log(`Processing get score log request for \'${username}\'.`)),
+        tap(_ => console.log(`Processing get score log request for \'${userId}\'.`)),
         catchError(this.handleError('getScoreLog', [] as Score[]))
       );
   }
@@ -82,10 +104,10 @@ export class ProfileService {
    * @returns: Observable du score sauvegardé.
    */
   public saveScore(score: Score): Observable<Score> {
-    const url = `${this.profileApiUrl}/${score.username}/score`;
+    const url = `${this.profileApiUrl}/${score.id}/score`;
     return this.httpClient.post<Score>(url, score, this.httpOptions)
     .pipe(
-      tap(_ => console.log(`Processing save score request for username \'${score.username}\'.`)),
+      tap(_ => console.log(`Processing save score request for username \'${score.username}\' (${score.id}).`)),
       catchError(this.handleError('saveScore', {} as Score))
     );
   }

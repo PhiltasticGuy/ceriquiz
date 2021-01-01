@@ -106,6 +106,7 @@ app.post("/api/auth/login", function (request, response) {
           // Créer la session pour cet utilisateur valide.
           let data = {
             authenticated: true,
+            id: res.rows[0].id,
             username: username,
             firstname: res.rows[0].prenom,
             lastname: res.rows[0].nom,
@@ -113,7 +114,8 @@ app.post("/api/auth/login", function (request, response) {
           };
           request.session.user = data;
 
-          // TODO: Flip the online flag in the PostgreSQL database.
+          setConnectedFlag(data.id, true);
+          emitPlayerConnected({ id: data.id, username: data.username });
 
           console.log(
             `${request.session.id} expire dans ${request.session.cookie.maxAge}`
@@ -131,6 +133,28 @@ app.post("/api/auth/login", function (request, response) {
     }
   });
 });
+
+function setConnectedFlag(userId, isConnected) {
+  const sql = `UPDATE fredouil.users SET statut_connexion='${(isConnected === true ? 1 : 0)}' WHERE id=${userId};`;
+  console.log(sql);
+
+  // Demander au pool un client connecté à la BD pour notre requête.
+  pgPool.connect(function (err, client, done) {
+    client.query(sql, (err, res) => {
+      if (err) {
+        console.log("Error executing SQL query.\n\n" + err.stack);
+      }
+      else if (res.rowCount > 0) {
+        // Si un record a été modifié, on retourne un HTTP 200.
+        console.log(`Utilisateur '${userId}' modifié avec succès.`);
+      }
+      else {
+        console.log("User does not exist.");
+      }
+    });
+    client.release();
+  });
+}
 
 app.get("/api/profile/:username", function (request, response) {
   console.log('request.session: ' + JSON.stringify(request.session));
@@ -215,11 +239,12 @@ app.put("/api/profile/:username", function(request, response) {
   });
 });
 
-app.get("/api/profile/:username/score", function (request, response) {
+app.get("/api/profile/:id/score", function (request, response) {
   console.log('request.session: ' + JSON.stringify(request.session));
 
   // Extraire l'information de la requête HTTP afin de la traiter.
-  const username = request.params.username;
+  // const username = request.params.username;
+  const userId = request.params.id;
 
   pgPool.connect(function (err, client, done) {
     if (err) {
@@ -230,7 +255,8 @@ app.get("/api/profile/:username/score", function (request, response) {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL retournant l'historique des scores de l'utilisateur.
-      const sql = `SELECT h.* FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user WHERE u.identifiant='${username}';`;
+      // const sql = `SELECT h.* FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user WHERE u.identifiant='${username}';`;
+      const sql = `SELECT h.*, u.identifiant AS "username" FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user WHERE u.id=${userId};`;
 
       client.query(sql, (err, res) => {
         if (err) {
@@ -240,7 +266,8 @@ app.get("/api/profile/:username/score", function (request, response) {
         else if (res.rows.length > 0) {
           // Mapping des noms de colonne de la BD à l'interface TypeScript.
           const data = res.rows.map(x => ({
-            username: username,
+            id: userId,
+            username: x.username,
             date: x.date_jeu,
             difficulty: x.niveau_jeu,
             correctAnswers: x.nb_reponses_corr,
@@ -261,11 +288,11 @@ app.get("/api/profile/:username/score", function (request, response) {
   });
 });
 
-app.post("/api/profile/:username/score", function (request, response) {
+app.post("/api/profile/:id/score", function (request, response) {
   console.log('request.session: ' + JSON.stringify(request.session));
 
   // Extraire l'information de la requête HTTP afin de la traiter.
-  const username = request.params.username;
+  const userId = request.params.id;
   const score = request.body;
 
   pgPool.connect(function (err, client, done) {
@@ -277,7 +304,7 @@ app.post("/api/profile/:username/score", function (request, response) {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL sauvegardant le score de l'utilisateur.
-      const sql = `INSERT INTO fredouil.historique (id_user, date_jeu, niveau_jeu, nb_reponses_corr, temps, score) SELECT DISTINCT id, NOW(), ${score.difficulty}, ${score.correctAnswers}, ${score.timeInSeconds}, ${score.score} FROM fredouil.users WHERE identifiant='${username}';`
+      const sql = `INSERT INTO fredouil.historique (id_user, date_jeu, niveau_jeu, nb_reponses_corr, temps, score) SELECT DISTINCT id, NOW(), ${score.difficulty}, ${score.correctAnswers}, ${score.timeInSeconds}, ${score.score} FROM fredouil.users WHERE id='${userId}';`
       console.log(sql);
       client.query(sql, (err, res) => {
         if (err) {
@@ -286,7 +313,14 @@ app.post("/api/profile/:username/score", function (request, response) {
         }
         else if (res.rowCount > 0) {
           // Si un record a été inséré, on retourne un HTTP 200.
-          console.log(`Score de l'utilisateur '${username}' inséré avec succès.`);
+          console.log(`Score de l'utilisateur '${score.username}' inséré avec succès.`);
+
+          isInTop10(userId, score.score, (players) => {
+            if (Array.isArray(players) && players.length > 0) {
+              emitTop10Updated(players);
+            }
+          });
+
           response.status(200).send({ status: 'OK'})
         }
         else {
@@ -299,42 +333,67 @@ app.post("/api/profile/:username/score", function (request, response) {
   });
 });
 
-app.get("/api/players/top10", function (request, response) {
-  console.log('request.session: ' + JSON.stringify(request.session));
-
+function getTop10(handleResponse) {
   pgPool.connect(function (err, client, done) {
     if (err) {
       console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
-      response.sendStatus(500);
+      return null;
     }
     else {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL retournant l'historique des scores de l'utilisateur.
-      const sql = `SELECT ROW_NUMBER () OVER (ORDER BY MAX(h.score) DESC) AS "ranking", u.identifiant AS "username", MAX(h.score) AS "score", u.statut_connexion AS "isConnected" FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user GROUP BY h.id_user, u.identifiant, u.statut_connexion ORDER BY MAX(h.score) DESC LIMIT 10;`;
+      const sql = `SELECT ROW_NUMBER () OVER (ORDER BY MAX(h.score) DESC) AS "ranking", h.id_user AS "id", u.identifiant AS "username", MAX(h.score) AS "score", u.statut_connexion AS "isConnected" FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user GROUP BY h.id_user, u.identifiant, h.score, u.statut_connexion ORDER BY MAX(h.score) DESC LIMIT 10;`;
 
       client.query(sql, (err, res) => {
         if (err) {
           console.log("Error executing SQL query.\n\n" + err.stack);
-          response.sendStatus(500);
+          return;
         }
         else if (res.rows.length > 0) {
           // Mapping des noms de colonne de la BD à l'interface TypeScript.
           const data = res.rows.map(x => ({
+            id: x.id,
             ranking: x.ranking,
             username: x.username,
             score: x.score
           }));
 
-          // Terminer la requête en retournant le data.
-          response.send(data);
+          handleResponse(data);
         }
         else {
           console.log("No top 10 available at the moment.");
-          response.sendStatus(500);
+          return;
         }
       });
       client.release();
+    }
+  });
+}
+
+function isInTop10(userId, score, handleResponse) {
+  getTop10((players) => {
+    if (players.find(item => item.id === userId && item.score === score)) {
+      console.log(`The score ${score} for user id ${userId} IS in the top 10 list!`);
+      handleResponse(players);
+    }
+    else {
+      console.log(`The score ${score} for user id ${userId} is NOT in the top 10 list.`);
+      handleResponse(null);
+    }
+  });
+}
+
+app.get("/api/players/top10", function (request, response) {
+  console.log('request.session: ' + JSON.stringify(request.session));
+
+  getTop10((players) => {
+    if (!Array.isArray(players) || !players.length) {
+      response.sendStatus(500);
+    }
+    else {
+      // Terminer la requête en retournant le data.
+      response.send(players);
     }
   });
 });
@@ -351,7 +410,7 @@ app.get("/api/players/online", function (request, response) {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL retournant l'historique des scores de l'utilisateur.
-      const sql = `SELECT identifiant AS "username", nom AS "lastname", prenom AS "firstname", avatar AS "avatarUrl" FROM fredouil.users WHERE statut_connexion=1 ORDER BY identifiant;`;
+      const sql = `SELECT id, identifiant AS "username", nom AS "lastname", prenom AS "firstname", avatar AS "avatarUrl" FROM fredouil.users WHERE statut_connexion=1 ORDER BY identifiant;`;
 
       client.query(sql, (err, res) => {
         if (err) {
@@ -361,6 +420,7 @@ app.get("/api/players/online", function (request, response) {
         else if (res.rows.length > 0) {
           // Mapping des noms de colonne de la BD à l'interface TypeScript.
           const data = res.rows.map(x => ({
+            id: x.id,
             username: x.username,
             lastname: x.lastname,
             firstname: x.firstname,
@@ -378,10 +438,6 @@ app.get("/api/players/online", function (request, response) {
       client.release();
     }
   });
-});
-
-app.get("/api/players/online/testAdd", function (request, response) {
-
 });
 
 app.get('/api/quiz', (request, response) => {
@@ -572,6 +628,28 @@ app.get('/api/quiz/:quizId/questions/:questionId', (request, response) => {
   });
 });
 
+app.get("/api/players/online/test-connect", function (request, response) {
+  testConnected();
+  response.sendStatus(200);
+});
+app.get("/api/players/online/test-disconnect", function (request, response) {
+  testDisconnected();
+  response.sendStatus(200);
+});
+
+app.get("/api/players/top10/test-update", function (request, response) {
+  testTop10Updated();
+  response.sendStatus(200);
+});
+app.get("/api/players/top10/test-pass", function (request, response) {
+  testTop10Updated_Pass();
+  response.sendStatus(200);
+});
+app.get("/api/players/top10/test-fail", function (request, response) {
+  testTop10Updated_Fail();
+  response.sendStatus(200);
+});
+
 app.get("/*", function (request, response) {
   response.sendFile(path.join(__dirname, ANGULAR_FILES, "index.html"));
 });
@@ -583,3 +661,63 @@ var server = app.listen(PORT, function () {
   console.log(`Root: ${__dirname}\n`);
   console.log(`[LOGS]`);
 });
+
+const io = require('socket.io')(server);
+
+io.on('connection', client => {
+  client.on('playerConnected', data => {
+    io.emit('playerConnected', data);
+  });
+
+  client.on('playerDisconnected', data => {
+    console.log(`Emitting playerDisconnected: ${data}`);
+    setConnectedFlag(data, false);
+    io.emit('playerDisconnected', data);
+  });
+});
+
+function emitPlayerConnected(user) { 
+  console.log(`Emitting playerConnected: ${JSON.stringify(user)}`);
+  io.emit('playerConnected', user);
+}
+
+function emitTop10Updated(players) { 
+  console.log(`Emitting top10Updated: ${JSON.stringify(players)}`);
+  io.emit('top10Updated', players);
+}
+
+let newId = -1;
+function testConnected() { 
+  io.emit('playerConnected', { id: newId--, username: 'MyTestUser' });
+}
+
+function testDisconnected() { 
+  io.emit('playerDisconnected', { id: ++newId, username: 'MyTestUser' });
+}
+
+function testTop10Updated() {
+  getTop10((players) => {
+    players.push({ ranking: 11, username: 'MyTestUser', score: 9999 });
+    io.emit('top10Updated', players);
+  });
+}
+
+function testTop10Updated_Pass() {
+  // username: quentin
+  // score:    90000
+  isInTop10(5, 90000, (players) => {
+    if (Array.isArray(players) && players.length > 0) {
+      players.push({ ranking: 11, username: 'MyTestUser', score: 9999 });
+      emitTop10Updated(players);
+    }
+  });
+}
+
+function testTop10Updated_Fail() {
+  isInTop10(-1, 9999, (players) => {
+    if (Array.isArray(players) && players.length > 0) {
+      emitTop10Updated(players);
+    }
+  });
+}
+

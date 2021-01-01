@@ -204,6 +204,7 @@ export class QuizPickerComponent implements OnInit {
     // Construire le record 'score' pour l'historique de l'utilisateur.
     const session: LoginResponse = JSON.parse(localStorage.getItem('session'));
     const data = {
+      id: session.id,
       username: session.username,
       date: new Date(),
       difficulty: Number(this.difficulty),

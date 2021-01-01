@@ -26,7 +26,7 @@ export class ProfileComponent implements OnInit {
       this.profile = value;
       this.tempAvatarUrl = this.profile.avatarUrl;
     });
-    this.profileService.getScoreLog(data.username).subscribe(value => {
+    this.profileService.getScoreLog(data.id).subscribe(value => {
       this.scoreLogs = value;
     });
   }

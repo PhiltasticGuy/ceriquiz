@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import {NgForm} from '@angular/forms';
 
-import LoginRequest from '../authentication/login-request';
+import LoginRequest from '../models/login-request';
 import { AuthenticationService } from '../authentication/authentication.service';
 import { Router } from '@angular/router';
 

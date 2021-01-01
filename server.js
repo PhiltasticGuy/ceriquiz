@@ -299,6 +299,91 @@ app.post("/api/profile/:username/score", function (request, response) {
   });
 });
 
+app.get("/api/players/top10", function (request, response) {
+  console.log('request.session: ' + JSON.stringify(request.session));
+
+  pgPool.connect(function (err, client, done) {
+    if (err) {
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
+      response.sendStatus(500);
+    }
+    else {
+      console.log("Connection established with PostgreSQL server.");
+
+      // Requête SQL retournant l'historique des scores de l'utilisateur.
+      const sql = `SELECT ROW_NUMBER () OVER (ORDER BY MAX(h.score) DESC) AS "ranking", u.identifiant AS "username", MAX(h.score) AS "score", u.statut_connexion AS "isConnected" FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user GROUP BY h.id_user, u.identifiant, u.statut_connexion ORDER BY MAX(h.score) DESC LIMIT 10;`;
+
+      client.query(sql, (err, res) => {
+        if (err) {
+          console.log("Error executing SQL query.\n\n" + err.stack);
+          response.sendStatus(500);
+        }
+        else if (res.rows.length > 0) {
+          // Mapping des noms de colonne de la BD à l'interface TypeScript.
+          const data = res.rows.map(x => ({
+            ranking: x.ranking,
+            username: x.username,
+            score: x.score
+          }));
+
+          // Terminer la requête en retournant le data.
+          response.send(data);
+        }
+        else {
+          console.log("No top 10 available at the moment.");
+          response.sendStatus(500);
+        }
+      });
+      client.release();
+    }
+  });
+});
+
+app.get("/api/players/online", function (request, response) {
+  console.log('request.session: ' + JSON.stringify(request.session));
+
+  pgPool.connect(function (err, client, done) {
+    if (err) {
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
+      response.sendStatus(500);
+    }
+    else {
+      console.log("Connection established with PostgreSQL server.");
+
+      // Requête SQL retournant l'historique des scores de l'utilisateur.
+      const sql = `SELECT identifiant AS "username", nom AS "lastname", prenom AS "firstname", avatar AS "avatarUrl" FROM fredouil.users WHERE statut_connexion=1 ORDER BY identifiant;`;
+
+      client.query(sql, (err, res) => {
+        if (err) {
+          console.log("Error executing SQL query.\n\n" + err.stack);
+          response.sendStatus(500);
+        }
+        else if (res.rows.length > 0) {
+          // Mapping des noms de colonne de la BD à l'interface TypeScript.
+          const data = res.rows.map(x => ({
+            username: x.username,
+            lastname: x.lastname,
+            firstname: x.firstname,
+            avatarUrl: x.avatarUrl
+          }));
+
+          // Terminer la requête en retournant le data.
+          response.send(data);
+        }
+        else {
+          console.log("No users connected at the moment.");
+          response.sendStatus(500);
+        }
+      });
+      client.release();
+    }
+  });
+});
+
+app.get("/api/players/online/testAdd", function (request, response) {
+
+});
+
 app.get('/api/quiz', (request, response) => {
   mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
     if (err) {

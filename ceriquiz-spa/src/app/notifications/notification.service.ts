@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Notification, NotificationType } from './notification';
+import { Notification, NotificationType } from '../models/notification';
 import { v4 as uuidv4 } from 'uuid';
 import { Observable, BehaviorSubject } from 'rxjs';
 

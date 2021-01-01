@@ -1,0 +1,18 @@
+<h2>Top 10</h2>
+
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+      <th scope="col">Rang</th>
+      <th scope="col">Identifiant</th>
+      <th scope="col">Score</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr *ngFor="let player of players; trackBy: trackById">
+      <th scope="row">{{ player.ranking }}</th>
+      <td>{{ player.username }}</td>
+      <td>{{ player.score }}</td>
+    </tr>
+  </tbody>
+</table>

@@ -1,8 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import Profile, { Score } from './profile';
+import { Observable, of, BehaviorSubject } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
+import Profile from '../models/profile';
+import Score from '../models/score';
+import RankedPlayer from '../models/ranked-player';
+import { Player } from '../models/player';
 
 @Injectable({
   providedIn: 'root'
@@ -10,13 +13,20 @@ import { map, tap, catchError } from 'rxjs/operators';
 export class ProfileService {
   // private profileApiUrl = 'http://pedago.univ-avignon.fr:3021/api/profile';
   private profileApiUrl = 'http://127.0.0.1:3021/api/profile';
+  private playersApiUrl = 'http://127.0.0.1:3021/api/players';
 
   // Options pour les HTTP Headers utilisées lors des requêtes HTTP.
   private readonly httpOptions = {
     headers: new HttpHeaders({ 'Content-Type': 'application/json' })
   };
 
-  constructor(private httpClient: HttpClient) { }
+  private top10Players: BehaviorSubject<RankedPlayer[]>;
+  private onlinePlayers: BehaviorSubject<Player[]>;
+
+  constructor(private httpClient: HttpClient) {
+    this.top10Players = new BehaviorSubject<RankedPlayer[]>([]);
+    this.onlinePlayers = new BehaviorSubject<Player[]>([]);
+  }
 
   /**
    * Charger le profil de l'utilisateur.
@@ -78,6 +88,62 @@ export class ProfileService {
       tap(_ => console.log(`Processing save score request for username \'${score.username}\'.`)),
       catchError(this.handleError('saveScore', {} as Score))
     );
+  }
+
+  getTop10PlayersObservable(): Observable<RankedPlayer[]> {
+    return this.top10Players.asObservable();
+  }
+
+  private setTop10Players(value: RankedPlayer[]): void {
+    this.top10Players.next(value);
+  }
+
+  /**
+   * Charger le top 10 des joueurs.
+   * 
+   * @returns: Observable du top 10 des joueurs.
+   */
+  public getTop10Players(): Observable<RankedPlayer[]> {
+    this.httpClient.get<RankedPlayer[]>(`${this.playersApiUrl}/top10`, this.httpOptions)
+      .pipe(
+        tap(_ => console.log(`Processing get top 10 request.`)),
+        catchError(this.handleError('getTop10', [] as RankedPlayer[]))
+      )
+      // Lorsqu'on reçoit une réponse, on assigne la valeur à l'observable.
+      .subscribe((value: RankedPlayer[]) => this.setTop10Players(value));
+
+    // L'observable de la liste top 10 des joueurs est retourné afin que
+    // l'on puisse recevoir ses nouvelles valeurs une fois que l'appel HTTP
+    // est traité.
+    return this.getTop10PlayersObservable();
+  }
+
+  getOnlinePlayersObservable(): Observable<Player[]> {
+    return this.onlinePlayers.asObservable();
+  }
+
+  private setOnlinePlayers(value: Player[]): void {
+    this.onlinePlayers.next(value);
+  }
+
+  /**
+   * Charger la liste des joueurs connectés.
+   * 
+   * @returns: Observable de la liste des joueurs connectés.
+   */
+  public getOnlinePlayers(): Observable<Player[]> {
+    this.httpClient.get<Player[]>(`${this.playersApiUrl}/online`, this.httpOptions)
+      .pipe(
+        tap(_ => console.log(`Processing get online players request.`)),
+        catchError(this.handleError('getOnlinePlayers', [] as Player[]))
+      )
+      // Lorsqu'on reçoit une réponse, on assigne la valeur à l'observable.
+      .subscribe((value: Player[]) => this.setOnlinePlayers(value));
+
+    // L'observable de la liste joueurs connectés est retourné afin que
+    // l'on puisse recevoir ses nouvelles valeurs une fois que l'appel HTTP
+    // est traité.
+    return this.getOnlinePlayersObservable();
   }
 
   /**

@@ -3,8 +3,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, BehaviorSubject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
-import LoginRequest from './login-request';
-import LoginResponse from './login-response';
+import LoginRequest from '../models/login-request';
+import LoginResponse from '../models/login-response';
 import { NotificationService } from '../notifications/notification.service';
 
 @Injectable({

@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { QuizService } from './quiz.service';
-import { Quiz, Question } from './quiz';
 import { TimerComponent } from '../timer/timer.component';
 import { Router } from '@angular/router';
 import { ProfileService } from '../profile/profile.service';
-import { Score } from '../profile/profile';
-import LoginResponse from '../authentication/login-response';
+import Score from '../models/score';
+import LoginResponse from '../models/login-response';
+import { Quiz, Question } from '../models/quiz';
 
 // TODO: Découper ce code en plusieurs components spécialisés?
 

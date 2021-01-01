@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ProfileService } from './profile.service';
-import Profile, { Score } from './profile';
-import LoginResponse from '../authentication/login-response';
 import { NgForm } from '@angular/forms';
 import { NotificationService } from '../notifications/notification.service';
-import { DifficultyTypes } from '../quiz-picker/quiz';
+import { DifficultyTypes } from '../models/quiz';
+import Profile from '../models/profile';
+import LoginResponse from '../models/login-response';
+import Score from '../models/score';
 
 @Component({
   selector: 'app-profile',

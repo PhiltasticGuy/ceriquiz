@@ -17,6 +17,8 @@ import { ProfileComponent } from './profile/profile.component';
 import { QuizPickerComponent } from './quiz-picker/quiz-picker.component';
 import { TimerComponent } from './timer/timer.component';
 import { DecimalPipe } from '@angular/common';
+import { Top10Component } from './top10/top10.component';
+import { OnlinePlayersComponent } from './online-players/online-players.component';
 
 @NgModule({
   declarations: [
@@ -30,7 +32,9 @@ import { DecimalPipe } from '@angular/common';
     PageNotFoundComponent,
     ProfileComponent,
     QuizPickerComponent,
-    TimerComponent
+    TimerComponent,
+    Top10Component,
+    OnlinePlayersComponent
   ],
   imports: [
     BrowserModule,

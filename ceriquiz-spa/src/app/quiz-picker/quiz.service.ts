@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Quiz, Question, CorrectAnswer, DifficultyTypes } from './quiz';
+import { Quiz, Question, CorrectAnswer, DifficultyTypes } from '../models/quiz';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 

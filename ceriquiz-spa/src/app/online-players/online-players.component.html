@@ -1,7 +1,7 @@
 <h2>Joueurs connectés</h2>
 
 <div class="list-group">
-  <a href="#" class="list-group-item list-group-item-action" *ngFor="let x of players">
+  <a [routerLink]="['/profile', x.id]" class="list-group-item list-group-item-action" *ngFor="let x of players">
     {{ x.username }}
   </a>
 </div>

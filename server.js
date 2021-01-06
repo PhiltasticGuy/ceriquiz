@@ -156,11 +156,11 @@ function setConnectedFlag(userId, isConnected) {
   });
 }
 
-app.get("/api/profile/:username", function (request, response) {
+app.get("/api/profile/:userId", function (request, response) {
   console.log('request.session: ' + JSON.stringify(request.session));
 
   // Extraire l'information de la requête HTTP afin de la traiter.
-  const username = request.params.username;
+  const userId = request.params.userId;
 
   pgPool.connect(function (err, client, done) {
     if (err) {
@@ -171,7 +171,7 @@ app.get("/api/profile/:username", function (request, response) {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL retournant le mot de passe hashé de l'utilisateur.
-      const sql = `SELECT * FROM fredouil.users WHERE identifiant='${username}';`;
+      const sql = `SELECT * FROM fredouil.users WHERE id='${userId}';`;
 
       client.query(sql, (err, res) => {
         if (err) {
@@ -203,8 +203,8 @@ app.get("/api/profile/:username", function (request, response) {
   });
 });
 
-app.put("/api/profile/:username", function(request, response) {
-  const username = request.params.username;
+app.put("/api/profile/:userId", function(request, response) {
+  const userId = request.params.userId;
   const profile = request.body;
 
   pgPool.connect(function(err, client, done) {
@@ -217,7 +217,7 @@ app.put("/api/profile/:username", function(request, response) {
 
       // Requête SQL retournant le mot de passe hashé de l'utilisateur.
       // const sql = `UPDATE fredouil.users SET nom='${profile.lastname}', prenom='${profile.firstname}', date_naissance='${profile.dateBirth}', avatar='${profile.avatarUrl}', humeur='${profile.status}' WHERE identifiant='${username}';`;
-      const sql = `UPDATE fredouil.users SET avatar='${profile.avatarUrl}', humeur='${profile.status}' WHERE identifiant='${username}';`;
+      const sql = `UPDATE fredouil.users SET avatar='${profile.avatarUrl}', humeur='${profile.status}' WHERE id='${userId}';`;
 
       client.query(sql, (err, res) => {
         if (err) {
@@ -226,7 +226,7 @@ app.put("/api/profile/:username", function(request, response) {
         }
         else if (res.rowCount > 0) {
           // Si un record a été modifié, on retourne un HTTP 200.
-          console.log(`Utilisateur '${username}' modifié avec succès.`);
+          console.log(`Utilisateur '${userId}' modifié avec succès.`);
           response.status(200).send({ status: 'OK'})
         }
         else {
@@ -666,6 +666,8 @@ const io = require('socket.io')(server);
 
 io.on('connection', client => {
   client.on('playerConnected', data => {
+    console.log(`Emitting playerConnected: ${data}`);
+    setConnectedFlag(data, true);
     io.emit('playerConnected', data);
   });
 

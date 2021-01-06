@@ -99,8 +99,6 @@ export class AuthenticationService {
     data.authenticated = false;
     localStorage.setItem('session', JSON.stringify(data));
 
-    // TODO: Flip the online flag in the PostgreSQL database.
-
     // Avertir l'utilisateur à l'aide de notifications appropriées.
     this.notificationService.clear();
     this.notificationService.add(
@@ -109,6 +107,7 @@ export class AuthenticationService {
       'Connectez-vous afin de jouer une partie!'
     );
 
+    // Avertir le serveur que l'utilisateur s'est déconnecté.
     this.socket.emit('playerDisconnected', data.id);
 
     // Avertir les subscribers que l'utilisateur n'est plus connecté.

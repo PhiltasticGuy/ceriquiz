@@ -6,6 +6,7 @@ import { DifficultyTypes } from '../models/quiz';
 import Profile from '../models/profile';
 import LoginResponse from '../models/login-response';
 import Score from '../models/score';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-profile',
@@ -17,16 +18,30 @@ export class ProfileComponent implements OnInit {
   public tempAvatarUrl = '';
   public profile: Profile;
   public scoreLogs: Score[];
+  private userId: number;
+  public isCurrentUser: boolean;
 
-  constructor(private profileService: ProfileService, private notificationService: NotificationService) { }
+  constructor(private profileService: ProfileService, private notificationService: NotificationService, private route: ActivatedRoute) {
+    this.route.params.subscribe(params => {
+      const currentUserId = (JSON.parse(localStorage.getItem('session')) as LoginResponse).id;
+      if (params['id']) {
+        this.userId = parseInt(params['id']);
+        this.isCurrentUser = this.userId === currentUserId;
+      }
+      else {
+        this.userId = currentUserId;
+        this.isCurrentUser = true;
+      }
+    });
+  }
 
   ngOnInit(): void {
     const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
-    this.profileService.getProfile(data.username).subscribe(value => {
+    this.profileService.getProfile(this.userId).subscribe(value => {
       this.profile = value;
       this.tempAvatarUrl = this.profile.avatarUrl;
     });
-    this.profileService.getScoreLog(data.id).subscribe(value => {
+    this.profileService.getScoreLog(this.userId).subscribe(value => {
       this.scoreLogs = value;
     });
   }
@@ -70,7 +85,7 @@ export class ProfileComponent implements OnInit {
     this.isEditing = false;
 
     // Rafraîchir la page avec l'information de la base de données.
-    this.profileService.getProfile(this.profile.username).subscribe(value => {
+    this.profileService.getProfile(this.userId).subscribe(value => {
       this.profile = value;
       this.tempAvatarUrl = this.profile.avatarUrl;
     });

@@ -13,6 +13,7 @@ const routes: Routes = [
   { path: 'dashboard', component: DashboardComponent, canActivate: [ AccessGuard ] },
   { path: 'quiz', component: QuizPickerComponent, canActivate: [ AccessGuard ] },
   { path: 'profile', component: ProfileComponent, canActivate: [ AccessGuard ] },
+  { path: 'profile/:id', component: ProfileComponent, canActivate: [ AccessGuard ] },
   { path: '', redirectTo: '/dashboard', pathMatch: 'full' }, // Par défault, rendez-vous au dashboard.
   { path: '**', component: PageNotFoundComponent } // Si on ne reconnaît pas la route: 404!
 ];

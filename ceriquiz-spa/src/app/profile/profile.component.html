@@ -8,6 +8,10 @@
       alt="Photo de profil pour {{ profile.firstname + ' ' + profile.lastname }}."
       title="Photo de profil pour {{ profile.firstname + ' ' + profile.lastname }}.">
   </div>
+  <div class="row justify-content-center mb-3">
+    <ngb-alert *ngIf="profile.isConnected" [type]="'success'" [dismissible]="false">Le joueur est connecté!</ngb-alert>
+    <ngb-alert *ngIf="!profile.isConnected" [type]="'danger'" [dismissible]="false">Le joueur n'est pas connecté...</ngb-alert>
+  </div>
 
   <div *ngIf="!isEditing">
     <div class="row">
@@ -26,7 +30,7 @@
       <div class="col-sm-2">Date de naissance</div>
       <div class="col-sm-10"><p>{{ formatDate(profile.dateBirth) }}</p></div>
     </div>
-    <div class="row justify-content-center mb-3">
+    <div class="row justify-content-center mb-3" *ngIf="isCurrentUser">
       <button type="submit" class="btn btn-primary m-1" (click)="startEditing()">Modifier</button>
     </div>
   </div>

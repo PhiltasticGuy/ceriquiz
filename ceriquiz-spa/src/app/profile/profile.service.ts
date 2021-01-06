@@ -1,6 +1,6 @@
-import { Injectable, ComponentFactoryResolver } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, of, BehaviorSubject, Subscriber } from 'rxjs';
+import { Observable, of, BehaviorSubject, } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 import Profile from '../models/profile';
 import Score from '../models/score';
@@ -56,10 +56,10 @@ export class ProfileService {
    * @param username: Identifiant de l'utilisateur.
    * @returns: Observable du profil de l'utilisateur.
    */
-  public getProfile(username: string): Observable<Profile> {
-    return this.httpClient.get<Profile>(`${this.profileApiUrl}/${username}`, this.httpOptions)
+  public getProfile(userId: number): Observable<Profile> {
+    return this.httpClient.get<Profile>(`${this.profileApiUrl}/${userId}`, this.httpOptions)
       .pipe(
-        tap(_ => console.log(`Processing get profile request for \'${username}\'.`)),
+        tap(_ => console.log(`Processing get profile request for \'${userId}\'.`)),
         map((profile: Profile) => {
           profile.dateBirth = new Date(profile.dateBirth);
           return profile;

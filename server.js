@@ -134,28 +134,6 @@ app.post("/api/auth/login", function (request, response) {
   });
 });
 
-function setConnectedFlag(userId, isConnected) {
-  const sql = `UPDATE fredouil.users SET statut_connexion='${(isConnected === true ? 1 : 0)}' WHERE id=${userId};`;
-  console.log(sql);
-
-  // Demander au pool un client connecté à la BD pour notre requête.
-  pgPool.connect(function (err, client, done) {
-    client.query(sql, (err, res) => {
-      if (err) {
-        console.log("Error executing SQL query.\n\n" + err.stack);
-      }
-      else if (res.rowCount > 0) {
-        // Si un record a été modifié, on retourne un HTTP 200.
-        console.log(`Utilisateur '${userId}' modifié avec succès.`);
-      }
-      else {
-        console.log("User does not exist.");
-      }
-    });
-    client.release();
-  });
-}
-
 app.get("/api/profile/:userId", function (request, response) {
   console.log('request.session: ' + JSON.stringify(request.session));
 
@@ -255,85 +233,6 @@ app.put("/api/profile/:userId", function(request, response) {
   });
 });
 
-function getMedals(userId, handleResponse) {
-  pgPool.connect(function (err, client, done) {
-    if (err) {
-      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
-      handleResponse(null);
-    }
-    else {
-      console.log("Connection established with PostgreSQL server.");
-
-      // Requête SQL retournant l'historique des médailles de l'utilisateur.
-      const sql = `SELECT u.id AS "opponent_id", u.identifiant AS "opponent_username", h.date_defi AS "date" FROM fredouil.hist_defi AS h JOIN fredouil.users AS u ON u.id=h.id_user_perdant WHERE h.id_user_gagnant=${parseInt(userId)};`;
-
-      client.query(sql, (err, res) => {
-        if (err) {
-          console.log("Error executing SQL query.\n\n" + err.stack);
-          handleResponse(null);
-        }
-        else if (res.rows.length > 0) {
-          // Mapping des noms de colonne de la BD à l'interface TypeScript.
-          const data = res.rows.map(x => ({
-            opponentId: x.opponent_id,
-            opponentUsername: x.opponent_username,
-            challengeDate: x.date
-          }));
-
-          handleResponse(data);
-        }
-        else {
-          console.log("No medal log for this user.");
-          handleResponse([]);
-        }
-      });
-      client.release();
-    }
-  });
-}
-
-function getScores(userId, handleResponse) {
-  pgPool.connect(function (err, client, done) {
-    if (err) {
-      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
-      handleResponse(null);
-    }
-    else {
-      console.log("Connection established with PostgreSQL server.");
-
-      // Requête SQL retournant l'historique des scores de l'utilisateur.
-      // const sql = `SELECT h.* FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user WHERE u.identifiant='${username}';`;
-      const sql = `SELECT h.*, u.identifiant AS "username" FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user WHERE u.id=${userId};`;
-
-      client.query(sql, (err, res) => {
-        if (err) {
-          console.log("Error executing SQL query.\n\n" + err.stack);
-          handleResponse(null);
-        }
-        else if (res.rows.length > 0) {
-          // Mapping des noms de colonne de la BD à l'interface TypeScript.
-          const data = res.rows.map(x => ({
-            id: userId,
-            username: x.username,
-            date: x.date_jeu,
-            difficulty: x.niveau_jeu,
-            correctAnswers: x.nb_reponses_corr,
-            timeInSeconds: x.temps,
-            score: x.score
-          }));
-
-          handleResponse(data);
-        }
-        else {
-          console.log("No score log for this user.");
-          handleResponse([]);
-        }
-      });
-      client.release();
-    }
-  });
-}
-
 app.post("/api/profile/:id/score", function (request, response) {
   console.log('request.session: ' + JSON.stringify(request.session));
 
@@ -378,57 +277,6 @@ app.post("/api/profile/:id/score", function (request, response) {
     }
   });
 });
-
-function getTop10(handleResponse) {
-  pgPool.connect(function (err, client, done) {
-    if (err) {
-      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
-      handleResponse(null);
-    }
-    else {
-      console.log("Connection established with PostgreSQL server.");
-
-      // Requête SQL retournant l'historique des scores de l'utilisateur.
-      const sql = `SELECT ROW_NUMBER () OVER (ORDER BY MAX(h.score) DESC) AS "ranking", h.id_user AS "id", u.identifiant AS "username", MAX(h.score) AS "score", u.statut_connexion AS "isConnected" FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user GROUP BY h.id_user, u.identifiant, h.score, u.statut_connexion ORDER BY MAX(h.score) DESC LIMIT 10;`;
-
-      client.query(sql, (err, res) => {
-        if (err) {
-          console.log("Error executing SQL query.\n\n" + err.stack);
-          handleResponse(null);
-        }
-        else if (res.rows.length > 0) {
-          // Mapping des noms de colonne de la BD à l'interface TypeScript.
-          const data = res.rows.map(x => ({
-            id: x.id,
-            ranking: x.ranking,
-            username: x.username,
-            score: x.score
-          }));
-
-          handleResponse(data);
-        }
-        else {
-          console.log("No top 10 available at the moment.");
-          handleResponse(null);
-        }
-      });
-      client.release();
-    }
-  });
-}
-
-function isInTop10(userId, score, handleResponse) {
-  getTop10((players) => {
-    if (players.find(item => item.id === userId && item.score === score)) {
-      console.log(`The score ${score} for user id ${userId} IS in the top 10 list!`);
-      handleResponse(players);
-    }
-    else {
-      console.log(`The score ${score} for user id ${userId} is NOT in the top 10 list.`);
-      handleResponse(null);
-    }
-  });
-}
 
 app.get("/api/players/top10", function (request, response) {
   console.log('request.session: ' + JSON.stringify(request.session));
@@ -601,75 +449,6 @@ app.post('/api/players/challenges', (request, response) => {
     }
   });
 });
-
-function saveChallengeResult(winnerId, loserId, handleResponse) {
-  pgPool.connect(function (err, client, done) {
-    if (err) {
-      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
-      handleResponse(null);
-    }
-    else {
-      console.log("Connection established with PostgreSQL server.");
-
-      // Requête SQL retournant l'historique des scores de l'utilisateur.
-      const sql = `INSERT INTO fredouil.hist_defi (id_user_gagnant, id_user_perdant, date_defi) VALUES (${parseInt(winnerId)}, ${parseInt(loserId)}, NOW());`;
-
-      client.query(sql, (err, res) => {
-        if (err) {
-          console.log("Error executing SQL query.\n\n" + err.stack);
-          handleResponse(null);
-        }
-        else if (res.rows.length > 0) {
-          // Mapping des noms de colonne de la BD à l'interface TypeScript.
-          const data = res.rows.map(x => ({
-            id: x.id,
-            ranking: x.ranking,
-            username: x.username,
-            score: x.score
-          }));
-
-          handleResponse(data);
-        }
-        else {
-          console.log("No top 10 available at the moment.");
-          handleResponse(null);
-        }
-      });
-      client.release();
-    }
-  });
-}
-
-function deleteChallenge(challengeId, handleResponse) {
-  mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
-    if (err) {
-      console.log("Error connecting to MongoDB server.\n\n" + err.stack);
-      handleResponse(false);
-    }
-    else if (mongoClient) {
-      mongoClient.db().collection('defi').deleteOne(
-        { "_id": new mongo.ObjectId(challengeId) },
-        (error, result) => {
-          if (error) {
-            console.log("Error executing query on MongoDB server.\n > " + error);
-            handleResponse(false);
-          }
-          else if (result.deletedCount > 0) {
-            handleResponse(true);
-          }
-          else {
-            console.log("Error executing query on MongoDB server.\n");
-            handleResponse(false);
-          }
-          mongoClient.close();
-      });
-    }
-  });
-}
-
-function acceptChallenge(challengeId, handleResponse) {
-  deleteChallenge(challengeId, () => {});
-}
 
 app.delete('/api/players/challenges/:id', (request, response) => {
   const challengeId = request.params.id;
@@ -939,6 +718,227 @@ app.get("/api/players/challenges/test-new", function (request, response) {
 app.get("/*", function (request, response) {
   response.sendFile(path.join(__dirname, ANGULAR_FILES, "index.html"));
 });
+
+function setConnectedFlag(userId, isConnected) {
+  const sql = `UPDATE fredouil.users SET statut_connexion='${(isConnected === true ? 1 : 0)}' WHERE id=${userId};`;
+  console.log(sql);
+
+  // Demander au pool un client connecté à la BD pour notre requête.
+  pgPool.connect(function (err, client, done) {
+    client.query(sql, (err, res) => {
+      if (err) {
+        console.log("Error executing SQL query.\n\n" + err.stack);
+      }
+      else if (res.rowCount > 0) {
+        // Si un record a été modifié, on retourne un HTTP 200.
+        console.log(`Utilisateur '${userId}' modifié avec succès.`);
+      }
+      else {
+        console.log("User does not exist.");
+      }
+    });
+    client.release();
+  });
+}
+
+function getMedals(userId, handleResponse) {
+  pgPool.connect(function (err, client, done) {
+    if (err) {
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
+      handleResponse(null);
+    }
+    else {
+      console.log("Connection established with PostgreSQL server.");
+
+      // Requête SQL retournant l'historique des médailles de l'utilisateur.
+      const sql = `SELECT u.id AS "opponent_id", u.identifiant AS "opponent_username", h.date_defi AS "date" FROM fredouil.hist_defi AS h JOIN fredouil.users AS u ON u.id=h.id_user_perdant WHERE h.id_user_gagnant=${parseInt(userId)};`;
+
+      client.query(sql, (err, res) => {
+        if (err) {
+          console.log("Error executing SQL query.\n\n" + err.stack);
+          handleResponse(null);
+        }
+        else if (res.rows.length > 0) {
+          // Mapping des noms de colonne de la BD à l'interface TypeScript.
+          const data = res.rows.map(x => ({
+            opponentId: x.opponent_id,
+            opponentUsername: x.opponent_username,
+            challengeDate: x.date
+          }));
+
+          handleResponse(data);
+        }
+        else {
+          console.log("No medal log for this user.");
+          handleResponse([]);
+        }
+      });
+      client.release();
+    }
+  });
+}
+
+function getScores(userId, handleResponse) {
+  pgPool.connect(function (err, client, done) {
+    if (err) {
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
+      handleResponse(null);
+    }
+    else {
+      console.log("Connection established with PostgreSQL server.");
+
+      // Requête SQL retournant l'historique des scores de l'utilisateur.
+      // const sql = `SELECT h.* FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user WHERE u.identifiant='${username}';`;
+      const sql = `SELECT h.*, u.identifiant AS "username" FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user WHERE u.id=${userId};`;
+
+      client.query(sql, (err, res) => {
+        if (err) {
+          console.log("Error executing SQL query.\n\n" + err.stack);
+          handleResponse(null);
+        }
+        else if (res.rows.length > 0) {
+          // Mapping des noms de colonne de la BD à l'interface TypeScript.
+          const data = res.rows.map(x => ({
+            id: userId,
+            username: x.username,
+            date: x.date_jeu,
+            difficulty: x.niveau_jeu,
+            correctAnswers: x.nb_reponses_corr,
+            timeInSeconds: x.temps,
+            score: x.score
+          }));
+
+          handleResponse(data);
+        }
+        else {
+          console.log("No score log for this user.");
+          handleResponse([]);
+        }
+      });
+      client.release();
+    }
+  });
+}
+
+function getTop10(handleResponse) {
+  pgPool.connect(function (err, client, done) {
+    if (err) {
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
+      handleResponse(null);
+    }
+    else {
+      console.log("Connection established with PostgreSQL server.");
+
+      // Requête SQL retournant l'historique des scores de l'utilisateur.
+      const sql = `SELECT ROW_NUMBER () OVER (ORDER BY MAX(h.score) DESC) AS "ranking", h.id_user AS "id", u.identifiant AS "username", MAX(h.score) AS "score", u.statut_connexion AS "isConnected" FROM fredouil.historique AS h JOIN fredouil.users AS u ON u.id=h.id_user GROUP BY h.id_user, u.identifiant, h.score, u.statut_connexion ORDER BY MAX(h.score) DESC LIMIT 10;`;
+
+      client.query(sql, (err, res) => {
+        if (err) {
+          console.log("Error executing SQL query.\n\n" + err.stack);
+          handleResponse(null);
+        }
+        else if (res.rows.length > 0) {
+          // Mapping des noms de colonne de la BD à l'interface TypeScript.
+          const data = res.rows.map(x => ({
+            id: x.id,
+            ranking: x.ranking,
+            username: x.username,
+            score: x.score
+          }));
+
+          handleResponse(data);
+        }
+        else {
+          console.log("No top 10 available at the moment.");
+          handleResponse(null);
+        }
+      });
+      client.release();
+    }
+  });
+}
+
+function isInTop10(userId, score, handleResponse) {
+  getTop10((players) => {
+    if (players.find(item => item.id === userId && item.score === score)) {
+      console.log(`The score ${score} for user id ${userId} IS in the top 10 list!`);
+      handleResponse(players);
+    }
+    else {
+      console.log(`The score ${score} for user id ${userId} is NOT in the top 10 list.`);
+      handleResponse(null);
+    }
+  });
+}
+
+function saveChallengeResult(winnerId, loserId, handleResponse) {
+  pgPool.connect(function (err, client, done) {
+    if (err) {
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
+      handleResponse(null);
+    }
+    else {
+      console.log("Connection established with PostgreSQL server.");
+
+      // Requête SQL retournant l'historique des scores de l'utilisateur.
+      const sql = `INSERT INTO fredouil.hist_defi (id_user_gagnant, id_user_perdant, date_defi) VALUES (${parseInt(winnerId)}, ${parseInt(loserId)}, NOW());`;
+
+      client.query(sql, (err, res) => {
+        if (err) {
+          console.log("Error executing SQL query.\n\n" + err.stack);
+          handleResponse(null);
+        }
+        else if (res.rows.length > 0) {
+          // Mapping des noms de colonne de la BD à l'interface TypeScript.
+          const data = res.rows.map(x => ({
+            id: x.id,
+            ranking: x.ranking,
+            username: x.username,
+            score: x.score
+          }));
+
+          handleResponse(data);
+        }
+        else {
+          console.log("No top 10 available at the moment.");
+          handleResponse(null);
+        }
+      });
+      client.release();
+    }
+  });
+}
+
+function deleteChallenge(challengeId, handleResponse) {
+  mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
+    if (err) {
+      console.log("Error connecting to MongoDB server.\n\n" + err.stack);
+      handleResponse(false);
+    }
+    else if (mongoClient) {
+      mongoClient.db().collection('defi').deleteOne(
+        { "_id": new mongo.ObjectId(challengeId) },
+        (error, result) => {
+          if (error) {
+            console.log("Error executing query on MongoDB server.\n > " + error);
+            handleResponse(false);
+          }
+          else if (result.deletedCount > 0) {
+            handleResponse(true);
+          }
+          else {
+            console.log("Error executing query on MongoDB server.\n");
+            handleResponse(false);
+          }
+          mongoClient.close();
+      });
+    }
+  });
+}
+
+function acceptChallenge(challengeId, handleResponse) {
+  deleteChallenge(challengeId, () => {});
+}
 
 // Instantiation du serveur Node pour l'écoute sur le port désigné par les
 // variables d'environnement.

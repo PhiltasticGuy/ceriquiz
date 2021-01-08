@@ -54,7 +54,7 @@
         <label for="txtStatus" class="col-sm-2 col-form-label">Humeur</label>
         <div class="col-sm-10">
           <input type="text" class="form-control" id="txtStatus" name="txtStatus" placeholder="Humeur"
-          #status="ngModel" [(ngModel)]="profile.status" required maxlength="45">
+          #status="ngModel" [(ngModel)]="profile.status" maxlength="45">
         </div>
       </div>
       <div *ngIf="status.invalid && (status.dirty || status.touched)" class="alert alert-danger">

@@ -3,6 +3,7 @@ import { ProfileService } from '../profile/profile.service';
 import { Challenge } from '../models/challenge';
 import LoginResponse from '../models/login-response';
 import { Router } from '@angular/router';
+import { AuthenticationService } from '../authentication/authentication.service';
 
 @Component({
   selector: 'app-challenge-alert',
@@ -11,11 +12,16 @@ import { Router } from '@angular/router';
 })
 export class ChallengeAlertComponent implements OnInit {
 
+  public isAuthenticated = false;
   public challenges: Challenge[];
 
-  constructor(private profileService:ProfileService, private router: Router) { }
+  constructor(private authenticationService: AuthenticationService, private profileService:ProfileService, private router: Router) { }
 
   ngOnInit(): void {
+    this.authenticationService.getAuthenticated().subscribe(value => {
+      this.isAuthenticated = value;
+    });
+
     const userId = (JSON.parse(localStorage.getItem('session')) as LoginResponse).id;
     this.profileService.getChallenges(userId).subscribe(challenges => {
       this.challenges = challenges;

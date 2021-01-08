@@ -72,6 +72,8 @@ app.get("/", function (request, response) {
 
 // Gestion de méthode POST sur '/login'.
 app.post("/api/auth/login", function (request, response) {
+  console.log(`[POST: /api/auth/login] - Start`);
+
   // Extraire l'information de la requête HTTP afin de la traiter.
   const username = request.body.username;
   const password = request.body.password;
@@ -89,9 +91,9 @@ app.post("/api/auth/login", function (request, response) {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL retournant le mot de passe hashé de l'utilisateur.
-      const sql = `SELECT * FROM fredouil.users WHERE identifiant='${username}';`;
+      const sql = `SELECT * FROM fredouil.users WHERE identifiant=$1;`;
 
-      client.query(sql, (err, res) => {
+      client.query(sql, [ username ], (err, res) => {
         // Utiliser SHA1 afin de calculer le hash du mot de passe.
         const hashedPassword = crypto
           .createHash("sha1")
@@ -135,7 +137,7 @@ app.post("/api/auth/login", function (request, response) {
 });
 
 app.get("/api/profile/:userId", function (request, response) {
-  console.log('request.session: ' + JSON.stringify(request.session));
+  console.log(`[GET: /api/profile/${request.params.userId}] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
 
   // Extraire l'information de la requête HTTP afin de la traiter.
   const userId = request.params.userId;
@@ -149,9 +151,9 @@ app.get("/api/profile/:userId", function (request, response) {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL retournant le mot de passe hashé de l'utilisateur.
-      const sql = `SELECT * FROM fredouil.users WHERE id='${userId}';`;
+      const sql = `SELECT * FROM fredouil.users WHERE id=$1;`;
 
-      client.query(sql, (err, res) => {
+      client.query(sql, [userId],  (err, res) => {
         if (err) {
           console.log("Error executing SQL query.\n\n" + err.stack);
           response.sendStatus(500);
@@ -198,6 +200,8 @@ app.get("/api/profile/:userId", function (request, response) {
 });
 
 app.put("/api/profile/:userId", function(request, response) {
+  console.log(`[PUT: /api/profile/${request.params.userId}] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
+
   const userId = request.params.userId;
   const profile = request.body;
 
@@ -211,9 +215,9 @@ app.put("/api/profile/:userId", function(request, response) {
 
       // Requête SQL retournant le mot de passe hashé de l'utilisateur.
       // const sql = `UPDATE fredouil.users SET nom='${profile.lastname}', prenom='${profile.firstname}', date_naissance='${profile.dateBirth}', avatar='${profile.avatarUrl}', humeur='${profile.status}' WHERE identifiant='${username}';`;
-      const sql = `UPDATE fredouil.users SET avatar='${profile.avatarUrl}', humeur='${profile.status}' WHERE id='${userId}';`;
+      const sql = `UPDATE fredouil.users SET avatar=$1, humeur=$2 WHERE id=$3;`;
 
-      client.query(sql, (err, res) => {
+      client.query(sql, [profile.avatarUrl, profile.status, userId], (err, res) => {
         if (err) {
           console.log("Error executing SQL query.\n\n" + err.stack);
           response.sendStatus(500);
@@ -234,7 +238,7 @@ app.put("/api/profile/:userId", function(request, response) {
 });
 
 app.post("/api/profile/:id/score", function (request, response) {
-  console.log('request.session: ' + JSON.stringify(request.session));
+  console.log(`[POST: /api/profile/${request.params.id}/score] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
 
   // Extraire l'information de la requête HTTP afin de la traiter.
   const userId = request.params.id;
@@ -249,9 +253,9 @@ app.post("/api/profile/:id/score", function (request, response) {
       console.log("Connection established with PostgreSQL server.");
 
       // Requête SQL sauvegardant le score de l'utilisateur.
-      const sql = `INSERT INTO fredouil.historique (id_user, date_jeu, niveau_jeu, nb_reponses_corr, temps, score) SELECT DISTINCT id, NOW(), ${score.difficulty}, ${score.correctAnswers}, ${score.timeInSeconds}, ${score.score} FROM fredouil.users WHERE id='${userId}';`
-      console.log(sql);
-      client.query(sql, (err, res) => {
+      const sql = `INSERT INTO fredouil.historique (id_user, date_jeu, niveau_jeu, nb_reponses_corr, temps, score) SELECT DISTINCT id, NOW(), $1::integer, $2::integer, $3::integer, $4::integer FROM fredouil.users WHERE id=$5;`
+
+      client.query(sql, [parseInt(score.difficulty), parseInt(score.correctAnswers), parseInt(score.timeInSeconds), parseInt(score.score), userId], (err, res) => {
         if (err) {
           console.log("Error executing SQL query.\n\n" + err.stack);
           response.sendStatus(500);
@@ -279,7 +283,7 @@ app.post("/api/profile/:id/score", function (request, response) {
 });
 
 app.get("/api/players/top10", function (request, response) {
-  console.log('request.session: ' + JSON.stringify(request.session));
+  console.log(`[GET: /api/players/top10] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
 
   getTop10((players) => {
     if (!Array.isArray(players) || !players.length) {
@@ -293,7 +297,7 @@ app.get("/api/players/top10", function (request, response) {
 });
 
 app.get("/api/players", function (request, response) {
-  console.log('request.session: ' + JSON.stringify(request.session));
+  console.log(`[GET: /api/players] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
 
   pgPool.connect(function (err, client, done) {
     if (err) {
@@ -335,7 +339,7 @@ app.get("/api/players", function (request, response) {
 });
 
 app.get("/api/players/online", function (request, response) {
-  console.log('request.session: ' + JSON.stringify(request.session));
+  console.log(`[GET: /api/players/online] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
 
   pgPool.connect(function (err, client, done) {
     if (err) {
@@ -377,6 +381,8 @@ app.get("/api/players/online", function (request, response) {
 });
 
 app.get('/api/players/:userId/challenges', (request, response) => {
+  console.log(`[GET: /api/players/${request.params.userId}/challenges] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
+
   // Extraire l'information de la requête HTTP afin de la traiter.
   const userId = request.params.userId;
 
@@ -420,7 +426,7 @@ app.get('/api/players/:userId/challenges', (request, response) => {
 });
 
 app.post('/api/players/challenges', (request, response) => {
-  console.log('/api/players/challenges');
+  console.log(`[POST: /api/players/challenges] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
   const challenge = request.body;
 
   mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
@@ -451,8 +457,9 @@ app.post('/api/players/challenges', (request, response) => {
 });
 
 app.delete('/api/players/challenges/:id', (request, response) => {
-  const challengeId = request.params.id;
+  console.log(`[DELETE: /api/players/challenges/${request.params.id}] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
 
+  const challengeId = request.params.id;
   let challenge;
 
   mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
@@ -501,6 +508,8 @@ app.delete('/api/players/challenges/:id', (request, response) => {
 });
 
 app.get('/api/quiz', (request, response) => {
+  console.log(`[GET: /api/quiz] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
+
   mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
     if (err) {
       console.log("Error connecting to MongoDB server.\n\n" + err.stack);
@@ -537,6 +546,8 @@ app.get('/api/quiz', (request, response) => {
 });
 
 app.get('/api/quiz/:quizId/questions', (request, response) => {
+  console.log(`[GET: /api/quiz/${request.params.quizId}/questions] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
+
   mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
     if (err) {
       console.log("Error connecting to MongoDB server.\n\n" + err.stack);
@@ -645,6 +656,8 @@ app.get('/api/quiz/:quizId/questions', (request, response) => {
 });
 
 app.get('/api/quiz/:quizId/questions/:questionId', (request, response) => {
+  console.log(`[GET: /api/quiz/${request.params.quizId}/questions/${request.params.questionId}] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
+
   mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
     if (err) {
       console.log("Error connecting to MongoDB server.\n\n" + err.stack);
@@ -720,6 +733,8 @@ app.get("/*", function (request, response) {
 });
 
 function setConnectedFlag(userId, isConnected) {
+  console.log(`[setConnectedFlag(${userId}, ${isConnected})]`);
+
   const sql = `UPDATE fredouil.users SET statut_connexion='${(isConnected === true ? 1 : 0)}' WHERE id=${userId};`;
   console.log(sql);
 
@@ -742,6 +757,8 @@ function setConnectedFlag(userId, isConnected) {
 }
 
 function getMedals(userId, handleResponse) {
+  console.log(`[getMedals(${userId})]`);
+
   pgPool.connect(function (err, client, done) {
     if (err) {
       console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
@@ -779,6 +796,8 @@ function getMedals(userId, handleResponse) {
 }
 
 function getScores(userId, handleResponse) {
+  console.log(`[getScores(${userId})]`);
+
   pgPool.connect(function (err, client, done) {
     if (err) {
       console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
@@ -821,6 +840,8 @@ function getScores(userId, handleResponse) {
 }
 
 function getTop10(handleResponse) {
+  console.log(`[getTop10()]`);
+
   pgPool.connect(function (err, client, done) {
     if (err) {
       console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
@@ -859,6 +880,8 @@ function getTop10(handleResponse) {
 }
 
 function isInTop10(userId, score, handleResponse) {
+  console.log(`[isInTop10(${userId}, ${score})]`);
+
   getTop10((players) => {
     if (players.find(item => item.id === userId && item.score === score)) {
       console.log(`The score ${score} for user id ${userId} IS in the top 10 list!`);
@@ -872,6 +895,8 @@ function isInTop10(userId, score, handleResponse) {
 }
 
 function saveChallengeResult(winnerId, loserId, handleResponse) {
+  console.log(`[saveChallengeResult(${winnerId}, ${loserId})]`);
+
   pgPool.connect(function (err, client, done) {
     if (err) {
       console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
@@ -910,6 +935,8 @@ function saveChallengeResult(winnerId, loserId, handleResponse) {
 }
 
 function deleteChallenge(challengeId, handleResponse) {
+  console.log(`[deleteChallenge(${challengeId})]`);
+
   mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
     if (err) {
       console.log("Error connecting to MongoDB server.\n\n" + err.stack);

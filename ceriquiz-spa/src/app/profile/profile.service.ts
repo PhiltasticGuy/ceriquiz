@@ -9,15 +9,14 @@ import { Player } from '../models/player';
 import { io, Socket } from 'socket.io-client';
 import { Challenge } from '../models/challenge';
 import LoginResponse from '../models/login-response';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProfileService {
-  // private baseUrl = 'http://pedago.univ-avignon.fr:3021';
-  private baseUrl = 'http://127.0.0.1:3021';
-  private profileApiUrl = `${this.baseUrl}/api/profile`;
-  private playersApiUrl = `${this.baseUrl}/api/players`;
+  private profileApiUrl = `${environment.apiBaseUrl}/api/profile`;
+  private playersApiUrl = `${environment.apiBaseUrl}/api/players`;
 
   // Options pour les HTTP Headers utilisées lors des requêtes HTTP.
   private readonly httpOptions = {
@@ -30,7 +29,7 @@ export class ProfileService {
   private challenges: BehaviorSubject<Challenge[]>;
 
   constructor(private httpClient: HttpClient) {
-    this.socket = io(this.baseUrl);
+    this.socket = io(environment.apiBaseUrl);
     this.top10Players = new BehaviorSubject<RankedPlayer[]>([]);
     this.onlinePlayers = new BehaviorSubject<Player[]>([]);
     this.challenges = new BehaviorSubject<Challenge[]>([]);
@@ -260,6 +259,7 @@ export class ProfileService {
   public winChallenge(challengeId: string, winnerUserId: number, loserUserId: number): void {
     this.socket.emit('playerWonChallenge', { 'winnerUserId': winnerUserId, 'loserUserId': loserUserId });
   }
+  
   /**
    * Assurer une bonne gestion d'une erreur survenue lors d'une requête HTTP.
    *

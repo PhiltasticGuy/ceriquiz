@@ -7,14 +7,13 @@ import LoginRequest from '../models/login-request';
 import LoginResponse from '../models/login-response';
 import { NotificationService } from '../notifications/notification.service';
 import { io, Socket } from 'socket.io-client';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthenticationService {
-  // private baseUrl = 'http://pedago.univ-avignon.fr:3021';
-  private baseUrl = 'http://127.0.0.1:3021';
-  private authApiUrl = `${this.baseUrl}/api/auth/login`;
+  private authApiUrl = `${environment.apiBaseUrl}/api/auth/login`;
   private authenticated: BehaviorSubject<boolean>;
 
   // Options pour les HTTP Headers utilisées lors des requêtes HTTP.
@@ -45,7 +44,7 @@ export class AuthenticationService {
   }
 
   constructor(private httpClient: HttpClient, private notificationService: NotificationService) {
-    this.socket = io(this.baseUrl);
+    this.socket = io(environment.apiBaseUrl);
 
     const isLocallyAuthenticated = this.isLocalStorageSessionStillValid();
     this.authenticated = new BehaviorSubject<boolean>(isLocallyAuthenticated);

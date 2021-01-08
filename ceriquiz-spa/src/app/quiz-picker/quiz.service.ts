@@ -3,13 +3,13 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Quiz, Question, CorrectAnswer, DifficultyTypes } from '../models/quiz';
 import { Observable, of } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class QuizService {
-  // private quizApiUrl = 'http://pedago.univ-avignon.fr:3021/api/quiz';
-  private quizApiUrl = 'http://127.0.0.1:3021/api/quiz';
+  private quizApiUrl = `${environment.apiBaseUrl}/api/quiz`;
 
   // Options pour les HTTP Headers utilisées lors des requêtes HTTP.
   private readonly httpOptions = {
@@ -24,8 +24,7 @@ export class QuizService {
    * @returns: Observable de la liste des quiz.
    */
   public getQuizList(): Observable<Quiz[]> {
-    const url = `${this.quizApiUrl}`;
-    return this.httpClient.get<Quiz[]>(url, this.httpOptions)
+    return this.httpClient.get<Quiz[]>(this.quizApiUrl, this.httpOptions)
     .pipe(
       tap(_ => console.log(`Processing get quiz list request.`)),
       catchError(this.handleError('getQuizList', [] as Quiz[]))

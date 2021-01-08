@@ -114,7 +114,7 @@
   </div>
 </div>
 
-<div *ngIf="isQuizFinished">
+<div *ngIf="isQuizFinished && !isChallengeSelected">
   <h2>{{ quizTheme }}</h2>
   
   <div class="row justify-content-center">
@@ -142,7 +142,52 @@
       <button type="button" class="btn btn-primary m-1"
       (click)="onResetQuizList()">Choisir un autre quiz</button>
       <button type="button" class="btn btn-primary m-1"
+      (click)="isChallengeSelected = true">Lancer un défi</button>
+      <button type="button" class="btn btn-primary m-1"
       (click)="onGoToDashboard()">Retourner au tableau de bord</button>
+    </div>
+  </div>
+    
+  <hr>
+</div>
+
+<div *ngIf="isChallengeSelected">
+  <h2>{{ quizTheme }}</h2>
+  
+  <div class="row justify-content-center">
+    <div class="col-6 mb-3">
+      <div class="card text-center">
+        <div class="card-header">
+          <h3>Résultats de la partie</h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-6">Réponses:</div><div class="col-6">{{ correctAnswers }} / {{ questions.length }}</div>
+          </div>
+          <div class="row">
+            <div class="col-6">Chrono:</div><div class="col-6">{{ finalTime }}</div>
+          </div>
+          <div class="row">
+            <div class="col-6">Score:</div><div class="col-6">{{ score }}</div>
+          </div>
+          <div class="row">
+            <div class="col-6"><label for="selectedPlayer">Joueur à défier:</label></div>
+            <div class="col-6">
+              <select id="selectedPlayer" [(ngModel)]="selectedPlayerId">
+                <option *ngFor="let player of players" [value]="player.id">{{ player.username }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-sm-12 text-center">
+      <button type="button" class="btn btn-primary m-1"
+      (click)="onSendChallenge()">Lancer le défi</button>
+      <button type="button" class="btn btn-primary m-1"
+      (click)="onCancelChallenge()">Annuler</button>
     </div>
   </div>
     

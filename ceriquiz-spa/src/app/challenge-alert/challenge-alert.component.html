@@ -1,0 +1,14 @@
+<div class="card text-center mb-3" *ngIf="challenges.length > 0">
+  <div class="card-header text-white bg-info">
+    Nouveau défi
+  </div>
+  <div class="card-body">
+    <h5 class="card-title">{{ getTopChallenge().challengerUsername }} vous a défié au quizz {{ getTopChallenge().quiz.theme }} - {{ displayDifficulty() }}!</h5>
+    <p>Le score à battre est <span class="font-weight-bold">{{ getTopChallenge().targetScore }}</span>.</p>
+    <button type="button" class="btn btn-primary mr-2" (click)="onAccept()">Accepter</button>
+    <button type="button" class="btn btn-primary" (click)="onRefuse()">Refuser</button>
+  </div>
+  <div class="card-footer text-muted">
+    {{ challenges.length }} défi(s) en attente
+  </div>
+</div>

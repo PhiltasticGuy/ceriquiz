@@ -132,12 +132,31 @@
       </tr>
     </thead>
     <tbody>
-      <tr *ngFor="let score of scoreLogs">
+      <tr *ngFor="let score of profile.scores">
         <td>{{ score.date | date:'dd/MM/yyyy' }}</td>
         <td>{{ displayDifficulty(score.difficulty) }}</td>
         <td>{{ score.correctAnswers }}</td>
         <td>{{ score.timeInSeconds }}</td>
         <td>{{ score.score }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <hr>
+
+  <h2>Médailles</h2>
+
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">Date</th>
+        <th scope="col">Adversaire</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let medal of profile.medals">
+        <td>{{ medal.challengeDate | date:'dd/MM/yyyy' }}</td>
+        <td><a [routerLink]="['/profile', medal.opponentId]">{{ medal.opponentUsername }}</a></td>
       </tr>
     </tbody>
   </table>

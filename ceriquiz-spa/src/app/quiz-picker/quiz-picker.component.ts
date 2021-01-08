@@ -6,6 +6,8 @@ import { ProfileService } from '../profile/profile.service';
 import Score from '../models/score';
 import LoginResponse from '../models/login-response';
 import { Quiz, Question } from '../models/quiz';
+import { Player } from '../models/player';
+import { Challenge, ChallengeQuiz } from '../models/challenge';
 
 // TODO: Découper ce code en plusieurs components spécialisés?
 
@@ -35,10 +37,47 @@ export class QuizPickerComponent implements OnInit {
   public finalTime: string;
   public score: number = 0;
 
-  constructor(private quizService: QuizService, private profileService: ProfileService, private router: Router) { }
+  // Section: Challenge
+  private challenge: Challenge;
+  public isChallengeSelected = false;
+  public selectedPlayerId: number = -1;
+  public players: Player[];
+
+  constructor(private quizService: QuizService, private profileService: ProfileService, private router: Router) {
+  }
 
   ngOnInit(): void {
-    this.onResetQuizList();
+    // Charger la liste de joueurs pour les défis.
+    this.profileService.getPlayers().subscribe((players) => {
+      const currentUserId = (JSON.parse(localStorage.getItem('session')) as LoginResponse).id;
+      this.players = players.filter(value => value.id !== currentUserId);
+    });
+
+    console.log('BEFORE: ' + localStorage.getItem('challenge'));
+    console.log(localStorage.getItem('challenge'));
+    if (localStorage.getItem('challenge')) {
+      this.challenge = JSON.parse(localStorage.getItem('challenge')) as Challenge;
+
+      this.quizId = this.challenge.quiz.id;
+      this.difficulty = this.challenge.quiz.difficulty;
+      this.quizTheme = this.challenge.quiz.theme;
+      
+      // Assigner les questions et commencer à la première question.
+      this.questions = this.challenge.quiz.questions;
+      this.currentQuestionIndex = 0;
+
+      // Signaler le début de la partie de quiz.
+      this.isQuizStarted = true;
+
+      // Lancer le chronomètre!
+      this.isTimerRunning = true;
+
+      localStorage.removeItem('challenge');
+    }
+    else {
+      this.onResetQuizList();
+    }
+    console.log('AFTER: ' + localStorage.getItem('challenge'));
   }
 
   /**
@@ -229,6 +268,19 @@ export class QuizPickerComponent implements OnInit {
     const score = this.calculateScore(timer);
     this.profileService.saveScore(score).subscribe();
 
+    if (this.challenge && this.challenge.targetScore < score.score) {
+      const currentUserId = (JSON.parse(localStorage.getItem('session')) as LoginResponse).id;
+      let opponentUserId;
+      if (currentUserId == this.challenge.challengerUserId) {
+        opponentUserId = this.challenge.challengeeUserId;
+      }
+      else {
+        opponentUserId = this.challenge.challengerUserId;
+      }
+
+      this.profileService.winChallenge(this.challenge.id, currentUserId, opponentUserId);
+    }
+
     // Remettre le chronomètre à zéro au cas où l'utilisateur décide de jouer
     // une nouvelle partie.
     timer.reset();
@@ -250,6 +302,32 @@ export class QuizPickerComponent implements OnInit {
    */
   public onGoToDashboard(): void {
     this.router.navigate(['dashboard']);
+  }
+
+  public onSendChallenge(): void {
+    const sessionData = JSON.parse(localStorage.getItem('session')) as LoginResponse;
+    const challenge = {
+      gameId: 3022,
+      challengerUserId: sessionData.id,
+      challengerUsername: sessionData.username,
+      challengeeUserId: this.selectedPlayerId,
+      challengeeUsername: this.players.filter(item => item.id == this.selectedPlayerId)[0].username,
+      targetScore: this.score,
+      quiz: {
+        id: this.quizId,
+        theme: this.quizTheme,
+        difficulty: this.difficulty,
+        questions: this.questions
+      } as ChallengeQuiz
+    } as Challenge;
+
+    this.profileService.saveChallenge(challenge).subscribe();
+    this.router.navigate(['dashboard']);
+  }
+
+  public onCancelChallenge(): void {
+    this.isChallengeSelected = false;
+    this.selectedPlayerId = -1;
   }
 
   /**

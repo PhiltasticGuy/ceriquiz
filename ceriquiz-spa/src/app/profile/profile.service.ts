@@ -7,6 +7,8 @@ import Score from '../models/score';
 import RankedPlayer from '../models/ranked-player';
 import { Player } from '../models/player';
 import { io, Socket } from 'socket.io-client';
+import { Challenge } from '../models/challenge';
+import LoginResponse from '../models/login-response';
 
 @Injectable({
   providedIn: 'root'
@@ -25,11 +27,13 @@ export class ProfileService {
   private socket: Socket;
   private top10Players: BehaviorSubject<RankedPlayer[]>;
   private onlinePlayers: BehaviorSubject<Player[]>;
+  private challenges: BehaviorSubject<Challenge[]>;
 
   constructor(private httpClient: HttpClient) {
     this.socket = io(this.baseUrl);
     this.top10Players = new BehaviorSubject<RankedPlayer[]>([]);
     this.onlinePlayers = new BehaviorSubject<Player[]>([]);
+    this.challenges = new BehaviorSubject<Challenge[]>([]);
 
     this.socket.on('top10Updated', (data: RankedPlayer[]) => {
       console.log(`top10Updated.data = ${JSON.stringify(data)}`);
@@ -47,6 +51,15 @@ export class ProfileService {
       console.log(`playerDisconnected.data = ${JSON.stringify(data)}`);
       const filtered = this.onlinePlayers.value.filter(obj => obj.id !== data);
       this.setOnlinePlayers(filtered);
+    });
+
+    this.socket.on('playerChallenged', (data: Challenge) => {
+      console.log(`playerChallenged.data = ${JSON.stringify(data)}`);
+      const currentUserId = (JSON.parse(localStorage.getItem('session')) as LoginResponse).id;
+      if (data.challengeeUserId == currentUserId) {
+        this.challenges.value.push(data);
+        this.setChallenges(this.challenges.value);
+      }
     });
   }
 
@@ -74,27 +87,12 @@ export class ProfileService {
    * @param profile: Profil modifié de l'utilisateur.
    * @returns: Observable du profil de l'utilisateur modifié.
    */
-  public saveProfile(profile: Profile): Observable<Profile> {
-    return this.httpClient.put<Profile>(`${this.profileApiUrl}/${profile.username}`, profile, this.httpOptions)
+  public saveProfile(userId: number, profile: Profile): Observable<Profile> {
+    return this.httpClient.put<Profile>(`${this.profileApiUrl}/${userId}`, profile, this.httpOptions)
     .pipe(
-      tap(_ => console.log(`Processing update profile request for \'${profile.username}\'.`)),
+      tap(_ => console.log(`Processing update profile request for \'${userId}\'.`)),
       catchError(this.handleError('saveProfile', {} as Profile))
     );
-  }
-
-  /**
-   * Charger l'historique des scores de l'utilisateur.
-   *
-   * @param userId: Id de l'utilisateur.
-   * @returns: Observable de l'historique des scores.
-   */
-  // TODO: Imbriquer cette information dans la fonction getProfile()?
-  public getScoreLog(userId: number): Observable<Score[]> {
-    return this.httpClient.get<Score[]>(`${this.profileApiUrl}/${userId}/score`, this.httpOptions)
-      .pipe(
-        tap(_ => console.log(`Processing get score log request for \'${userId}\'.`)),
-        catchError(this.handleError('getScoreLog', [] as Score[]))
-      );
   }
 
   /**
@@ -140,6 +138,19 @@ export class ProfileService {
     return this.getTop10PlayersObservable();
   }
 
+  /**
+   * Charger la liste de tous les joueurs.
+   * 
+   * @returns: Observable de la liste de tous les joueurs.
+   */
+  public getPlayers(): Observable<Player[]> {
+    return this.httpClient.get<Player[]>(`${this.playersApiUrl}`, this.httpOptions)
+      .pipe(
+        tap(_ => console.log(`Processing get players request.`)),
+        catchError(this.handleError('getPlayers', [] as Player[]))
+      );
+  }
+
   getOnlinePlayersObservable(): Observable<Player[]> {
     return this.onlinePlayers.asObservable();
   }
@@ -167,7 +178,88 @@ export class ProfileService {
     // est traité.
     return this.getOnlinePlayersObservable();
   }
+  
+  getChallengesObservable(): Observable<Challenge[]> {
+    return this.challenges.asObservable();
+  }
 
+  private setChallenges(value: Challenge[]): void {
+    this.challenges.next(value);
+  }
+
+  /**
+   * Charger la liste des défis pour cet utilisateur.
+   * 
+   * @returns: Observable de la liste des défis pour cet utilisateur.
+   */
+  public getChallenges(userId: number): Observable<Challenge[]> {
+    this.httpClient.get<Challenge[]>(`${this.playersApiUrl}/${userId}/challenges`, this.httpOptions)
+      .pipe(
+        tap(_ => console.log(`Processing get challenge request.`)),
+        catchError(this.handleError('getChallenges', [] as Challenge[]))
+      )
+      // Lorsqu'on reçoit une réponse, on assigne la valeur à l'observable.
+      .subscribe((value: Challenge[]) => this.setChallenges(value));
+
+    // L'observable de la liste des défis est retournée afin que
+    // l'on puisse recevoir ses nouvelles valeurs une fois que l'appel HTTP
+    // est traité.
+    return this.getChallengesObservable();
+  }
+
+  /**
+   * Créer le nouveau défi.
+   *
+   * @param challenge: Nouveau défi.
+   * @returns: Observable du profil de l'utilisateur modifié.
+   */
+  public saveChallenge(challenge: Challenge): Observable<Challenge> {
+    return this.httpClient.post<Challenge>(`${this.playersApiUrl}/challenges`, challenge, this.httpOptions)
+    .pipe(
+      tap(_ => console.log(`Processing save challenge request.`)),
+      catchError(this.handleError('saveChallenge', {} as Challenge))
+    );
+  }
+
+  /**
+   * Accepter un défi.
+   *
+   * @param challengeId: Id du défi.
+   */
+  public acceptChallenge(challengeId: string): void {
+    this.socket.emit('playerAcceptedChallenge', challengeId);
+    this.setChallenges(this.challenges.value.slice(1));
+  }
+
+  /**
+   * Refuser un défi.
+   *
+   * @param challengeId: Id du défi.
+   * @returns: Observable du défi refusé.
+   */
+  public refuseChallenge(challengeId: string): Observable<Challenge[]> {
+    this.httpClient.delete<Challenge>(`${this.playersApiUrl}/challenges/${challengeId}`, this.httpOptions)
+    .pipe(
+      tap(_ => console.log(`Processing refuse challenge request.`)),
+      catchError(this.handleError('refuseChallenge', [] as Challenge[]))
+    )
+    // Lorsqu'on reçoit une réponse, on assigne la valeur à l'observable.
+    .subscribe((value: Challenge) => this.setChallenges(this.challenges.value.slice(1)));
+
+    // L'observable de la liste des défis est retournée afin que
+    // l'on puisse recevoir ses nouvelles valeurs une fois que l'appel HTTP
+    // est traité.
+    return this.getChallengesObservable();
+  }
+
+  /**
+   * Gagner un défi.
+   *
+   * @param challengeId: Id du défi.
+   */
+  public winChallenge(challengeId: string, winnerUserId: number, loserUserId: number): void {
+    this.socket.emit('playerWonChallenge', { 'winnerUserId': winnerUserId, 'loserUserId': loserUserId });
+  }
   /**
    * Assurer une bonne gestion d'une erreur survenue lors d'une requête HTTP.
    *

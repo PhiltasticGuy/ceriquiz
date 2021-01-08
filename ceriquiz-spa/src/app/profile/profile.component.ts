@@ -5,7 +5,6 @@ import { NotificationService } from '../notifications/notification.service';
 import { DifficultyTypes } from '../models/quiz';
 import Profile from '../models/profile';
 import LoginResponse from '../models/login-response';
-import Score from '../models/score';
 import { ActivatedRoute } from '@angular/router';
 
 @Component({
@@ -17,7 +16,6 @@ export class ProfileComponent implements OnInit {
   public isEditing = false;
   public tempAvatarUrl = '';
   public profile: Profile;
-  public scoreLogs: Score[];
   private userId: number;
   public isCurrentUser: boolean;
 
@@ -41,9 +39,6 @@ export class ProfileComponent implements OnInit {
       this.profile = value;
       this.tempAvatarUrl = this.profile.avatarUrl;
     });
-    this.profileService.getScoreLog(this.userId).subscribe(value => {
-      this.scoreLogs = value;
-    });
   }
 
   /**
@@ -64,7 +59,7 @@ export class ProfileComponent implements OnInit {
       this.profile.avatarUrl = this.tempAvatarUrl;
 
       // Sauvegarder le profil avec l'API.
-      this.profileService.saveProfile(this.profile).subscribe(() => {
+      this.profileService.saveProfile(this.userId, this.profile).subscribe(() => {
         // Basculer en mode affichage seulement.
         this.isEditing = false;
 

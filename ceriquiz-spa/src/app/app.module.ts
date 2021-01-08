@@ -19,6 +19,7 @@ import { TimerComponent } from './timer/timer.component';
 import { DecimalPipe } from '@angular/common';
 import { Top10Component } from './top10/top10.component';
 import { OnlinePlayersComponent } from './online-players/online-players.component';
+import { ChallengeAlertComponent } from './challenge-alert/challenge-alert.component';
 
 @NgModule({
   declarations: [
@@ -34,7 +35,8 @@ import { OnlinePlayersComponent } from './online-players/online-players.componen
     QuizPickerComponent,
     TimerComponent,
     Top10Component,
-    OnlinePlayersComponent
+    OnlinePlayersComponent,
+    ChallengeAlertComponent
   ],
   imports: [
     BrowserModule,

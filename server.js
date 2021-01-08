@@ -187,11 +187,27 @@ app.get("/api/profile/:userId", function (request, response) {
             dateBirth: res.rows[0].date_naissance,
             avatarUrl: res.rows[0].avatar,
             status: res.rows[0].humeur,
-            isConnected: (res.rows[0].statut_connexion === 1)
+            isConnected: (res.rows[0].statut_connexion === 1),
+            scores: [],
+            medals: []
           };
+          
+          // Charger l'historique des scores.
+          getScores(userId, (scores) => {
+            if (Array.isArray(scores)) {
+              data.scores = scores;
 
-          // Terminer la requête en retournant le data.
-          response.send(data);
+              // Charger la liste de médailles.
+              getMedals(userId, (medals) => {
+                if (Array.isArray(medals)) {
+                  data.medals = medals;
+
+                  // Terminer la requête en retournant le data.
+                  response.send(data);
+                }
+              });
+            }
+          });
         }
         else {
           console.log("User does not exist.");
@@ -239,17 +255,48 @@ app.put("/api/profile/:userId", function(request, response) {
   });
 });
 
-app.get("/api/profile/:id/score", function (request, response) {
-  console.log('request.session: ' + JSON.stringify(request.session));
-
-  // Extraire l'information de la requête HTTP afin de la traiter.
-  // const username = request.params.username;
-  const userId = request.params.id;
-
+function getMedals(userId, handleResponse) {
   pgPool.connect(function (err, client, done) {
     if (err) {
       console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
-      response.sendStatus(500);
+      handleResponse(null);
+    }
+    else {
+      console.log("Connection established with PostgreSQL server.");
+
+      // Requête SQL retournant l'historique des médailles de l'utilisateur.
+      const sql = `SELECT u.id AS "opponent_id", u.identifiant AS "opponent_username", h.date_defi AS "date" FROM fredouil.hist_defi AS h JOIN fredouil.users AS u ON u.id=h.id_user_perdant WHERE h.id_user_gagnant=${parseInt(userId)};`;
+
+      client.query(sql, (err, res) => {
+        if (err) {
+          console.log("Error executing SQL query.\n\n" + err.stack);
+          handleResponse(null);
+        }
+        else if (res.rows.length > 0) {
+          // Mapping des noms de colonne de la BD à l'interface TypeScript.
+          const data = res.rows.map(x => ({
+            opponentId: x.opponent_id,
+            opponentUsername: x.opponent_username,
+            challengeDate: x.date
+          }));
+
+          handleResponse(data);
+        }
+        else {
+          console.log("No medal log for this user.");
+          handleResponse([]);
+        }
+      });
+      client.release();
+    }
+  });
+}
+
+function getScores(userId, handleResponse) {
+  pgPool.connect(function (err, client, done) {
+    if (err) {
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
+      handleResponse(null);
     }
     else {
       console.log("Connection established with PostgreSQL server.");
@@ -261,7 +308,7 @@ app.get("/api/profile/:id/score", function (request, response) {
       client.query(sql, (err, res) => {
         if (err) {
           console.log("Error executing SQL query.\n\n" + err.stack);
-          response.sendStatus(500);
+          handleResponse(null);
         }
         else if (res.rows.length > 0) {
           // Mapping des noms de colonne de la BD à l'interface TypeScript.
@@ -275,18 +322,17 @@ app.get("/api/profile/:id/score", function (request, response) {
             score: x.score
           }));
 
-          // Terminer la requête en retournant le data.
-          response.send(data);
+          handleResponse(data);
         }
         else {
           console.log("No score log for this user.");
-          response.sendStatus(500);
+          handleResponse([]);
         }
       });
       client.release();
     }
   });
-});
+}
 
 app.post("/api/profile/:id/score", function (request, response) {
   console.log('request.session: ' + JSON.stringify(request.session));
@@ -321,7 +367,7 @@ app.post("/api/profile/:id/score", function (request, response) {
             }
           });
 
-          response.status(200).send({ status: 'OK'})
+          response.status(200).send({ status: 'OK'});
         }
         else {
           console.log("No score log for this user.\n\n" + JSON.stringify(res));
@@ -337,7 +383,7 @@ function getTop10(handleResponse) {
   pgPool.connect(function (err, client, done) {
     if (err) {
       console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
-      return null;
+      handleResponse(null);
     }
     else {
       console.log("Connection established with PostgreSQL server.");
@@ -348,7 +394,7 @@ function getTop10(handleResponse) {
       client.query(sql, (err, res) => {
         if (err) {
           console.log("Error executing SQL query.\n\n" + err.stack);
-          return;
+          handleResponse(null);
         }
         else if (res.rows.length > 0) {
           // Mapping des noms de colonne de la BD à l'interface TypeScript.
@@ -363,7 +409,7 @@ function getTop10(handleResponse) {
         }
         else {
           console.log("No top 10 available at the moment.");
-          return;
+          handleResponse(null);
         }
       });
       client.release();
@@ -394,6 +440,48 @@ app.get("/api/players/top10", function (request, response) {
     else {
       // Terminer la requête en retournant le data.
       response.send(players);
+    }
+  });
+});
+
+app.get("/api/players", function (request, response) {
+  console.log('request.session: ' + JSON.stringify(request.session));
+
+  pgPool.connect(function (err, client, done) {
+    if (err) {
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
+      response.sendStatus(500);
+    }
+    else {
+      console.log("Connection established with PostgreSQL server.");
+
+      // Requête SQL retournant l'historique des scores de l'utilisateur.
+      const sql = `SELECT id, identifiant AS "username", nom AS "lastname", prenom AS "firstname", avatar AS "avatarUrl" FROM fredouil.users ORDER BY identifiant;`;
+
+      client.query(sql, (err, res) => {
+        if (err) {
+          console.log("Error executing SQL query.\n\n" + err.stack);
+          response.sendStatus(500);
+        }
+        else if (res.rows.length > 0) {
+          // Mapping des noms de colonne de la BD à l'interface TypeScript.
+          const data = res.rows.map(x => ({
+            id: x.id,
+            username: x.username,
+            lastname: x.lastname,
+            firstname: x.firstname,
+            avatarUrl: x.avatarUrl
+          }));
+
+          // Terminer la requête en retournant le data.
+          response.send(data);
+        }
+        else {
+          console.log("Could not find any players.");
+          response.sendStatus(500);
+        }
+      });
+      client.release();
     }
   });
 });
@@ -436,6 +524,199 @@ app.get("/api/players/online", function (request, response) {
         }
       });
       client.release();
+    }
+  });
+});
+
+app.get('/api/players/:userId/challenges', (request, response) => {
+  // Extraire l'information de la requête HTTP afin de la traiter.
+  const userId = request.params.userId;
+
+  mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
+    if (err) {
+      console.log("Error connecting to MongoDB server.\n\n" + err.stack);
+      response.sendStatus(500);
+    }
+    else if (mongoClient) {
+      const findRequest = {
+        $and : [
+          { 'gameId': parseInt(process.env.PORT_ANGULAR) },
+          { 'challengeeUserId': userId }
+        ]        
+      };
+      console.log(findRequest);
+      mongoClient.db().collection('defi').find(findRequest)
+      // Mapping des noms de colonne de la BD à l'interface TypeScript.
+      .map(item => ({
+        id: item._id,
+        gameId: item.gameId,
+        challengerUserId: item.challengerUserId,
+        challengerUsername: item.challengerUsername,
+        challengeeUserId: item.challengeeUserId,
+        challengeeUsername: item.challengeeUsername,
+        targetScore: item.targetScore,
+        quiz: item.quiz
+      }))
+      .toArray(function (err, data) {
+        if (err) {
+          console.log("Error executing query on MongoDB server.\n\n" + err.stack);
+          response.sendStatus(500);
+        }
+        else if(data) {
+          response.send(data);
+        }
+        mongoClient.close();
+      });
+    }
+  });
+});
+
+app.post('/api/players/challenges', (request, response) => {
+  console.log('/api/players/challenges');
+  const challenge = request.body;
+
+  mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
+    if (err) {
+      console.log("Error connecting to MongoDB server.\n\n" + err.stack);
+      response.sendStatus(500);
+    }
+    else if (mongoClient) {
+      mongoClient.db().collection('defi').insertOne(challenge, (error, result) => {
+        if (error) {
+          console.log("Error executing query on MongoDB server.\n > " + error);
+          response.sendStatus(500);
+        }
+        else if (!result.result.ok) {
+          console.log("Error executing query on MongoDB server.\n");
+          console.log(result);
+          response.sendStatus(500);
+        }
+        else if(result.insertedCount > 0) {
+          challenge.id = result.insertedId.valueOf();
+          response.send(challenge);
+          emitPlayerChallenged(challenge);
+        }
+        mongoClient.close();
+      });
+    }
+  });
+});
+
+function saveChallengeResult(winnerId, loserId, handleResponse) {
+  pgPool.connect(function (err, client, done) {
+    if (err) {
+      console.log("Error connecting to PostgreSQL server.\n\n" + err.stack);
+      handleResponse(null);
+    }
+    else {
+      console.log("Connection established with PostgreSQL server.");
+
+      // Requête SQL retournant l'historique des scores de l'utilisateur.
+      const sql = `INSERT INTO fredouil.hist_defi (id_user_gagnant, id_user_perdant, date_defi) VALUES (${parseInt(winnerId)}, ${parseInt(loserId)}, NOW());`;
+
+      client.query(sql, (err, res) => {
+        if (err) {
+          console.log("Error executing SQL query.\n\n" + err.stack);
+          handleResponse(null);
+        }
+        else if (res.rows.length > 0) {
+          // Mapping des noms de colonne de la BD à l'interface TypeScript.
+          const data = res.rows.map(x => ({
+            id: x.id,
+            ranking: x.ranking,
+            username: x.username,
+            score: x.score
+          }));
+
+          handleResponse(data);
+        }
+        else {
+          console.log("No top 10 available at the moment.");
+          handleResponse(null);
+        }
+      });
+      client.release();
+    }
+  });
+}
+
+function deleteChallenge(challengeId, handleResponse) {
+  mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
+    if (err) {
+      console.log("Error connecting to MongoDB server.\n\n" + err.stack);
+      handleResponse(false);
+    }
+    else if (mongoClient) {
+      mongoClient.db().collection('defi').deleteOne(
+        { "_id": new mongo.ObjectId(challengeId) },
+        (error, result) => {
+          if (error) {
+            console.log("Error executing query on MongoDB server.\n > " + error);
+            handleResponse(false);
+          }
+          else if (result.deletedCount > 0) {
+            handleResponse(true);
+          }
+          else {
+            console.log("Error executing query on MongoDB server.\n");
+            handleResponse(false);
+          }
+          mongoClient.close();
+      });
+    }
+  });
+}
+
+function acceptChallenge(challengeId, handleResponse) {
+  deleteChallenge(challengeId, () => {});
+}
+
+app.delete('/api/players/challenges/:id', (request, response) => {
+  const challengeId = request.params.id;
+
+  let challenge;
+
+  mongoClient.connect(dsnMongoDb, { useNewUrlParser: true, useUnifiedTopology: true }, function (err, mongoClient) {
+    if (err) {
+      console.log("Error connecting to MongoDB server.\n\n" + err.stack);
+      response.sendStatus(500);
+    }
+    else if (mongoClient) {
+      mongoClient.db().collection('defi').findOne({ "_id": new mongo.ObjectId(challengeId) }, (error, result) => {
+        if (error) {
+          console.log("Error executing query on MongoDB server.\n > " + error);
+          response.sendStatus(500);
+        }
+        else if (result) {
+          challenge = result;
+          console.log(result);
+        }
+        else {
+          console.log("Error executing query on MongoDB server.\n");
+          console.log(result);
+          response.sendStatus(500);
+        }
+      });
+
+      mongoClient.db().collection('defi').deleteOne(
+        { "_id": new mongo.ObjectId(challengeId) },
+        (error, result) => {
+          if (error) {
+            console.log("Error executing query on MongoDB server.\n > " + error);
+            response.sendStatus(500);
+          }
+          else if (result.deletedCount > 0) {
+            saveChallengeResult(challenge.challengerUserId, challenge.challengeeUserId, _ => {
+              response.status(200).send({ status: 'OK'});
+            });
+          }
+          else {
+            console.log("Error executing query on MongoDB server.\n");
+            console.log(result);
+            response.sendStatus(500);
+          }
+          mongoClient.close();
+      });
     }
   });
 });
@@ -650,6 +931,11 @@ app.get("/api/players/top10/test-fail", function (request, response) {
   response.sendStatus(200);
 });
 
+app.get("/api/players/challenges/test-new", function (request, response) {
+  testNewChallenge();
+  response.sendStatus(200);
+});
+
 app.get("/*", function (request, response) {
   response.sendFile(path.join(__dirname, ANGULAR_FILES, "index.html"));
 });
@@ -676,6 +962,16 @@ io.on('connection', client => {
     setConnectedFlag(data, false);
     io.emit('playerDisconnected', data);
   });
+
+  client.on('playerAcceptedChallenge', data => {
+    console.log(`Emitting playerAcceptedChallenge: ${data}`);
+    acceptChallenge(data, () => {});
+  });
+
+  client.on('playerWonChallenge', data => {
+    console.log(`Emitting playerWonChallenge: ${data}`);
+    saveChallengeResult(data.winnerUserId, data.loserUserId, () => {});
+  });
 });
 
 function emitPlayerConnected(user) { 
@@ -686,6 +982,11 @@ function emitPlayerConnected(user) {
 function emitTop10Updated(players) { 
   console.log(`Emitting top10Updated: ${JSON.stringify(players)}`);
   io.emit('top10Updated', players);
+}
+
+function emitPlayerChallenged(challenge) { 
+  console.log(`Emitting playerChallenged: ${JSON.stringify(challenge)}`);
+  io.emit('playerChallenged', challenge);
 }
 
 let newId = -1;
@@ -721,5 +1022,22 @@ function testTop10Updated_Fail() {
       emitTop10Updated(players);
     }
   });
+}
+
+function testNewChallenge() {
+  io.emit(
+    'playerChallenged',
+    { 
+      challengerUserId: 38,
+      challengeeUserId: 37,
+      challengerUsername: 'TestPlayer1',
+      challengeeUsername: 'TestPlayer2',
+      targetScore: 1000,
+      quiz: {
+        theme: 'Star Wars',
+        difficulty: 'Difficile'
+      }
+    }
+  );
 }
 

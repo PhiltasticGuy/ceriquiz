@@ -70,6 +70,10 @@ app.get("/", function (request, response) {
   response.sendFile(path.join(__dirname, ANGULAR_FILES, "index.html"));
 });
 
+//===========================================================================//
+// [API Routes - Authentification]
+//===========================================================================//
+
 // Gestion de méthode POST sur '/login'.
 app.post("/api/auth/login", function (request, response) {
   console.log(`[POST: /api/auth/login] - Start`);
@@ -135,6 +139,10 @@ app.post("/api/auth/login", function (request, response) {
     }
   });
 });
+
+//===========================================================================//
+// [API Routes - Players]
+//===========================================================================//
 
 app.get("/api/profile/:userId", function (request, response) {
   console.log(`[GET: /api/profile/${request.params.userId}] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
@@ -380,6 +388,10 @@ app.get("/api/players/online", function (request, response) {
   });
 });
 
+//===========================================================================//
+// [API Routes - Challenges]
+//===========================================================================//
+
 app.get('/api/players/:userId/challenges', (request, response) => {
   console.log(`[GET: /api/players/${request.params.userId}/challenges] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
 
@@ -466,46 +478,58 @@ app.delete('/api/players/challenges/:id', (request, response) => {
     if (err) {
       console.log("Error connecting to MongoDB server.\n\n" + err.stack);
       response.sendStatus(500);
+      mongoClient.close();
     }
     else if (mongoClient) {
       mongoClient.db().collection('defi').findOne({ "_id": new mongo.ObjectId(challengeId) }, (error, result) => {
         if (error) {
           console.log("Error executing query on MongoDB server.\n > " + error);
           response.sendStatus(500);
+          mongoClient.close();
         }
         else if (result) {
           challenge = result;
           console.log(result);
 
-          mongoClient.db().collection('defi').deleteOne(
-            { "_id": new mongo.ObjectId(challengeId) },
-            (error, result) => {
-              if (error) {
-                console.log("Error executing query on MongoDB server.\n > " + error);
-                response.sendStatus(500);
-              }
-              else if (result.deletedCount > 0) {
-                saveChallengeResult(challenge.challengerUserId, challenge.challengeeUserId, _ => {
-                  response.status(200).send({ status: 'OK'});
-                });
-              }
-              else {
-                console.log("Error executing query on MongoDB server.\n");
-                console.log(result);
-                response.sendStatus(500);
-              }
+          deleteChallenge(challengeId, () => {
+            saveChallengeResult(challenge.challengerUserId, challenge.challengeeUserId, _ => {
+              response.status(200).send({ status: 'OK'});
+            });
           });
+          // mongoClient.db().collection('defi').deleteOne(
+          //   { "_id": new mongo.ObjectId(challengeId) },
+          //   (error, result) => {
+          //     if (error) {
+          //       console.log("Error executing query on MongoDB server.\n > " + error);
+          //       response.sendStatus(500);
+          //     }
+          //     else if (result.deletedCount > 0) {
+          //       saveChallengeResult(challenge.challengerUserId, challenge.challengeeUserId, _ => {
+          //         response.status(200).send({ status: 'OK'});
+          //       });
+          //     }
+          //     else {
+          //       console.log("Error executing query on MongoDB server.\n");
+          //       console.log(result);
+          //       response.sendStatus(500);
+          //     }
+          //     mongoClient.close();
+          // });
         }
         else {
           console.log("Error executing query on MongoDB server.\n");
           console.log(result);
           response.sendStatus(500);
+          mongoClient.close();
         }
-        mongoClient.close();
       });
     }
   });
 });
+
+//===========================================================================//
+// [API Routes - Quiz]
+//===========================================================================//
 
 app.get('/api/quiz', (request, response) => {
   console.log(`[GET: /api/quiz] - (UserId: ${request.session.user.id}, Username: ${request.session.user.username})`);
@@ -701,6 +725,9 @@ app.get('/api/quiz/:quizId/questions/:questionId', (request, response) => {
   });
 });
 
+//===========================================================================//
+// [API Routes - Tests]
+//===========================================================================//
 app.get("/api/players/online/test-connect", function (request, response) {
   testConnected();
   response.sendStatus(200);
@@ -728,10 +755,16 @@ app.get("/api/players/challenges/test-new", function (request, response) {
   response.sendStatus(200);
 });
 
+//===========================================================================//
+// [API Routes - Catch All]
+//===========================================================================//
 app.get("/*", function (request, response) {
   response.sendFile(path.join(__dirname, ANGULAR_FILES, "index.html"));
 });
 
+//===========================================================================//
+// [Fonctions JS]
+//===========================================================================//
 function setConnectedFlag(userId, isConnected) {
   console.log(`[setConnectedFlag(${userId}, ${isConnected})]`);
 
@@ -967,14 +1000,23 @@ function acceptChallenge(challengeId, handleResponse) {
   deleteChallenge(challengeId, () => {});
 }
 
-// Instantiation du serveur Node pour l'écoute sur le port désigné par les
-// variables d'environnement.
+//===========================================================================//
+// [Instanciation Serveur NodeJS]
+//===========================================================================//
+
+/**
+ * Instantiation du serveur Node pour l'écoute sur le port désigné par les
+ * variables d'environnement.
+ **/
 var server = app.listen(PORT, function () {
   console.log(`Listening on port ${PORT}`);
   console.log(`Root: ${__dirname}\n`);
   console.log(`[LOGS]`);
 });
 
+//===========================================================================//
+// [WebSockets]
+//===========================================================================//
 const io = require('socket.io')(server);
 
 io.on('connection', client => {
@@ -1016,6 +1058,9 @@ function emitPlayerChallenged(challenge) {
   io.emit('playerChallenged', challenge);
 }
 
+//===========================================================================//
+// [WebSockets - Tests]
+//===========================================================================//
 let newId = -1;
 function testConnected() { 
   io.emit('playerConnected', { id: newId--, username: 'MyTestUser' });

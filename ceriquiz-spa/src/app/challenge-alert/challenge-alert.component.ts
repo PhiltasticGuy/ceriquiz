@@ -20,15 +20,15 @@ export class ChallengeAlertComponent implements OnInit {
   ngOnInit(): void {
     this.authenticationService.getAuthenticated().subscribe(value => {
       this.isAuthenticated = value;
+
+      const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
+
+      if (data) {
+        this.profileService.getChallenges(data.id).subscribe(challenges => {
+          this.challenges = challenges;
+        });
+      }
     });
-
-    const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
-
-    if (data) {
-      this.profileService.getChallenges(data.id).subscribe(challenges => {
-        this.challenges = challenges;
-      });
-    }
   }
 
   /**

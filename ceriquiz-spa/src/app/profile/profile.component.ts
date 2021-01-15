@@ -20,6 +20,9 @@ export class ProfileComponent implements OnInit {
   public isCurrentUser: boolean;
 
   constructor(private profileService: ProfileService, private notificationService: NotificationService, private route: ActivatedRoute) {
+  }
+
+  ngOnInit(): void {
     this.route.params.subscribe(params => {
       const currentUserId = (JSON.parse(localStorage.getItem('session')) as LoginResponse).id;
       if (params['id']) {
@@ -30,14 +33,12 @@ export class ProfileComponent implements OnInit {
         this.userId = currentUserId;
         this.isCurrentUser = true;
       }
-    });
-  }
-
-  ngOnInit(): void {
-    const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
-    this.profileService.getProfile(this.userId).subscribe(value => {
-      this.profile = value;
-      this.tempAvatarUrl = this.profile.avatarUrl;
+      
+      const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
+      this.profileService.getProfile(this.userId).subscribe(value => {
+        this.profile = value;
+        this.tempAvatarUrl = this.profile.avatarUrl;
+      });
     });
   }
 

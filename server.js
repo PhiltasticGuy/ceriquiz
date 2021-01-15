@@ -476,32 +476,32 @@ app.delete('/api/players/challenges/:id', (request, response) => {
         else if (result) {
           challenge = result;
           console.log(result);
+
+          mongoClient.db().collection('defi').deleteOne(
+            { "_id": new mongo.ObjectId(challengeId) },
+            (error, result) => {
+              if (error) {
+                console.log("Error executing query on MongoDB server.\n > " + error);
+                response.sendStatus(500);
+              }
+              else if (result.deletedCount > 0) {
+                saveChallengeResult(challenge.challengerUserId, challenge.challengeeUserId, _ => {
+                  response.status(200).send({ status: 'OK'});
+                });
+              }
+              else {
+                console.log("Error executing query on MongoDB server.\n");
+                console.log(result);
+                response.sendStatus(500);
+              }
+          });
         }
         else {
           console.log("Error executing query on MongoDB server.\n");
           console.log(result);
           response.sendStatus(500);
         }
-      });
-
-      mongoClient.db().collection('defi').deleteOne(
-        { "_id": new mongo.ObjectId(challengeId) },
-        (error, result) => {
-          if (error) {
-            console.log("Error executing query on MongoDB server.\n > " + error);
-            response.sendStatus(500);
-          }
-          else if (result.deletedCount > 0) {
-            saveChallengeResult(challenge.challengerUserId, challenge.challengeeUserId, _ => {
-              response.status(200).send({ status: 'OK'});
-            });
-          }
-          else {
-            console.log("Error executing query on MongoDB server.\n");
-            console.log(result);
-            response.sendStatus(500);
-          }
-          mongoClient.close();
+        mongoClient.close();
       });
     }
   });
@@ -979,40 +979,40 @@ const io = require('socket.io')(server);
 
 io.on('connection', client => {
   client.on('playerConnected', data => {
-    console.log(`Emitting playerConnected: ${data}`);
+    console.log(`[RECEIVE: playerConnected] - ${JSON.stringify(data)}`);
     setConnectedFlag(data, true);
     io.emit('playerConnected', data);
   });
 
   client.on('playerDisconnected', data => {
-    console.log(`Emitting playerDisconnected: ${data}`);
+    console.log(`[RECEIVE: playerDisconnected] - ${JSON.stringify(data)}`);
     setConnectedFlag(data, false);
     io.emit('playerDisconnected', data);
   });
 
   client.on('playerAcceptedChallenge', data => {
-    console.log(`Emitting playerAcceptedChallenge: ${data}`);
+    console.log(`[RECEIVE: playerAcceptedChallenge] - ${JSON.stringify(data)}`);
     acceptChallenge(data, () => {});
   });
 
   client.on('playerWonChallenge', data => {
-    console.log(`Emitting playerWonChallenge: ${data}`);
+    console.log(`[RECEIVE: playerWonChallenge] - ${JSON.stringify(data)}`);
     saveChallengeResult(data.winnerUserId, data.loserUserId, () => {});
   });
 });
 
 function emitPlayerConnected(user) { 
-  console.log(`Emitting playerConnected: ${JSON.stringify(user)}`);
+  console.log(`[EMIT: playerConnected] - ${JSON.stringify(user)}`);
   io.emit('playerConnected', user);
 }
 
 function emitTop10Updated(players) { 
-  console.log(`Emitting top10Updated: ${JSON.stringify(players)}`);
+  console.log(`[EMIT: top10Updated] - ${JSON.stringify(players)}`);
   io.emit('top10Updated', players);
 }
 
 function emitPlayerChallenged(challenge) { 
-  console.log(`Emitting playerChallenged: ${JSON.stringify(challenge)}`);
+  console.log(`[EMIT: playerChallenged] - ${JSON.stringify(challenge)}`);
   io.emit('playerChallenged', challenge);
 }
 

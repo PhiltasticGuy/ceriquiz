@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { QuizService } from './quiz.service';
 import { TimerComponent } from '../timer/timer.component';
 import { Router } from '@angular/router';
@@ -16,7 +16,7 @@ import { Challenge, ChallengeQuiz } from '../models/challenge';
   templateUrl: './quiz-picker.component.html',
   styleUrls: ['./quiz-picker.component.scss']
 })
-export class QuizPickerComponent implements OnInit {
+export class QuizPickerComponent implements OnInit, OnDestroy {
   // Section: Quiz Picker
   public quizList: Quiz[] = [];
   public questions: Question[] = [];
@@ -78,6 +78,33 @@ export class QuizPickerComponent implements OnInit {
       this.onResetQuizList();
     }
     console.log('AFTER: ' + localStorage.getItem('challenge'));
+  }
+  
+  private saveChallengeResults() {
+    const session: LoginResponse = JSON.parse(localStorage.getItem('session'));
+
+    if (session) {
+      const currentUserId = session.id;
+
+      let opponentUserId;
+      if (currentUserId == this.challenge.challengerUserId) {
+        opponentUserId = this.challenge.challengeeUserId;
+      }
+      else {
+        opponentUserId = this.challenge.challengerUserId;
+      }
+  
+      this.profileService.winChallenge(this.challenge.id, opponentUserId, currentUserId);
+  
+      this.challenge = undefined;
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.challenge && !this.isQuizFinished) {
+      console.log('The challenge has been abandoned!');
+      this.saveChallengeResults();
+    }
   }
 
   /**
@@ -279,6 +306,8 @@ export class QuizPickerComponent implements OnInit {
       }
 
       this.profileService.winChallenge(this.challenge.id, currentUserId, opponentUserId);
+
+      this.challenge = undefined;
     }
 
     // Remettre le chronomètre à zéro au cas où l'utilisateur décide de jouer
@@ -348,6 +377,9 @@ export class QuizPickerComponent implements OnInit {
     this.correctAnswers = 0;
     this.finalTime = undefined;
     this.score = 0;
+    this.challenge = undefined;
+    this.isChallengeSelected = false;
+    this.selectedPlayerId = -1;
 
     // Charger la liste des quiz disponibles.
     this.quizService.getQuizList().subscribe((quizList: Quiz[]) => {

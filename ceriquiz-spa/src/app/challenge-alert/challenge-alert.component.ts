@@ -23,6 +23,8 @@ export class ChallengeAlertComponent implements OnInit {
 
       const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
 
+      // Si l'utilisateur est authentifié, s'inscrire à l'observeur pour les 
+      // alertes de défi.
       if (data) {
         this.profileService.getChallenges(data.id).subscribe(challenges => {
           this.challenges = challenges;
@@ -59,7 +61,10 @@ export class ChallengeAlertComponent implements OnInit {
     return this.challenges[0];
   }
 
-  public onAccept(id: string): void {
+  /**
+   * Accepter le plus récent défi et naviguer immédiatement à l'écran du quiz.
+   */
+  public onAccept(): void {
     const challenge = this.getTopChallenge();
 
     this.profileService.acceptChallenge(challenge.id);
@@ -67,7 +72,10 @@ export class ChallengeAlertComponent implements OnInit {
     this.router.navigate(['quiz']);
   }
 
-  public onRefuse(id: string): void {
+  /**
+   * Refuser le plus récent défi.
+   */
+  public onRefuse(): void {
     const challenge = this.getTopChallenge();
     this.profileService.refuseChallenge(challenge.id).subscribe();
   }

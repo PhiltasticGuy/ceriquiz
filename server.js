@@ -485,7 +485,6 @@ app.delete('/api/players/challenges/:id', (request, response) => {
         if (error) {
           console.log("Error executing query on MongoDB server.\n > " + error);
           response.sendStatus(500);
-          mongoClient.close();
         }
         else if (result) {
           challenge = result;
@@ -496,32 +495,13 @@ app.delete('/api/players/challenges/:id', (request, response) => {
               response.status(200).send({ status: 'OK'});
             });
           });
-          // mongoClient.db().collection('defi').deleteOne(
-          //   { "_id": new mongo.ObjectId(challengeId) },
-          //   (error, result) => {
-          //     if (error) {
-          //       console.log("Error executing query on MongoDB server.\n > " + error);
-          //       response.sendStatus(500);
-          //     }
-          //     else if (result.deletedCount > 0) {
-          //       saveChallengeResult(challenge.challengerUserId, challenge.challengeeUserId, _ => {
-          //         response.status(200).send({ status: 'OK'});
-          //       });
-          //     }
-          //     else {
-          //       console.log("Error executing query on MongoDB server.\n");
-          //       console.log(result);
-          //       response.sendStatus(500);
-          //     }
-          //     mongoClient.close();
-          // });
         }
         else {
           console.log("Error executing query on MongoDB server.\n");
           console.log(result);
           response.sendStatus(500);
-          mongoClient.close();
         }
+        mongoClient.close();
       });
     }
   });

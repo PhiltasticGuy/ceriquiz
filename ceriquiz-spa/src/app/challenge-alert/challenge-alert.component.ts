@@ -22,10 +22,13 @@ export class ChallengeAlertComponent implements OnInit {
       this.isAuthenticated = value;
     });
 
-    const userId = (JSON.parse(localStorage.getItem('session')) as LoginResponse).id;
-    this.profileService.getChallenges(userId).subscribe(challenges => {
-      this.challenges = challenges;
-    });
+    const data: LoginResponse = JSON.parse(localStorage.getItem('session'));
+
+    if (data) {
+      this.profileService.getChallenges(data.id).subscribe(challenges => {
+        this.challenges = challenges;
+      });
+    }
   }
 
   /**
@@ -46,6 +49,10 @@ export class ChallengeAlertComponent implements OnInit {
     else {
       return 'Aucune sélection...';
     }
+  }
+
+  public hasChallenges(): boolean {
+    return (Array.isArray(this.challenges) && this.challenges.length > 0);
   }
 
   public getTopChallenge(): Challenge {

@@ -6,18 +6,11 @@
   <div class="row" *ngIf="!quizId">
     <div class="col-sm-4 mb-3" *ngFor="let quiz of quizList">
       <div class="card text-center">
-        <!-- <div class="card-header">
-          Featured
-        </div> -->
         <div class="card-body">
           <p class="card-title">{{ quiz.theme }}</p>
           <p class="card-subtitle mb-2 text-muted">Écrit par {{ quiz.writer }}</p>
-          <!-- <p class="card-text">Ce quiz est fourni par <i>{{ quiz.provider }}</i></p> -->
           <button type="button" class="btn btn-primary" (click)="onClick(quiz)">Choisir<span class="sr-only"> le quiz '{{ quiz.theme }}'</span></button>
         </div>
-        <!-- <div class="card-footer text-muted">
-          2 days ago
-        </div> -->
       </div>
     </div>
   </div>

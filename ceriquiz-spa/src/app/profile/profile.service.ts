@@ -54,10 +54,15 @@ export class ProfileService {
 
     this.socket.on('playerChallenged', (data: Challenge) => {
       console.log(`playerChallenged.data = ${JSON.stringify(data)}`);
-      const currentUserId = (JSON.parse(localStorage.getItem('session')) as LoginResponse).id;
-      if (data.challengeeUserId == currentUserId) {
-        this.challenges.value.push(data);
-        this.setChallenges(this.challenges.value);
+
+      const session: LoginResponse = JSON.parse(localStorage.getItem('session'));
+  
+      if (session) {
+        const currentUserId = session.id;
+        if (data.challengeeUserId == currentUserId) {
+          this.challenges.value.push(data);
+          this.setChallenges(this.challenges.value);
+        }
       }
     });
   }

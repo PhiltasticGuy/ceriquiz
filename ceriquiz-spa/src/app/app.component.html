@@ -13,7 +13,7 @@
 <!-- Contenu principal. -->
 <div class="container">
   <app-notification></app-notification>
-  <app-challenge-alert></app-challenge-alert>
+  <app-challenge-alert *ngIf="isAuthenticated"></app-challenge-alert>
 
   <router-outlet></router-outlet>
 </div>

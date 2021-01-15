@@ -29,10 +29,18 @@ export class ProfileService {
   private challenges: BehaviorSubject<Challenge[]>;
 
   constructor(private httpClient: HttpClient) {
-    this.socket = io(environment.apiBaseUrl);
     this.top10Players = new BehaviorSubject<RankedPlayer[]>([]);
     this.onlinePlayers = new BehaviorSubject<Player[]>([]);
     this.challenges = new BehaviorSubject<Challenge[]>([]);
+
+    this.setupWebSockets();
+  }
+
+  /**
+   * Préparation des WebSockets.
+   */
+  private setupWebSockets(): void {
+    this.socket = io(environment.apiBaseUrl);
 
     this.socket.on('top10Updated', (data: RankedPlayer[]) => {
       console.log(`top10Updated.data = ${JSON.stringify(data)}`);
@@ -59,6 +67,8 @@ export class ProfileService {
   
       if (session) {
         const currentUserId = session.id;
+
+        // Si le joueur défié est le joueur actuel, ajouter le défi dans sa liste.
         if (data.challengeeUserId == currentUserId) {
           this.challenges.value.push(data);
           this.setChallenges(this.challenges.value);
@@ -256,6 +266,7 @@ export class ProfileService {
     return this.getChallengesObservable();
   }
 
+  //TODO: Could create a Challenge class and include this in the class?
   private getOpponentId(challenge: Challenge, userId: number): number {
     if (userId == challenge.challengerUserId) {
       return challenge.challengeeUserId;

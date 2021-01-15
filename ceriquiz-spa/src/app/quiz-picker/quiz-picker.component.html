@@ -4,7 +4,7 @@
   <h2>Choisir un thème</h2>
 
   <div class="row" *ngIf="!quizId">
-    <div class="col-sm-4 mb-3" *ngFor="let quiz of quizList">
+    <div class="col-md-4 mb-3" *ngFor="let quiz of quizList">
       <div class="card text-center">
         <div class="card-body">
           <p class="card-title">{{ quiz.theme }}</p>
@@ -15,7 +15,7 @@
     </div>
   </div>
   <div class="row" *ngIf="quizId">
-    <div class="col-sm-12 text-center">
+    <div class="col-md-12 text-center">
       <p><span class="sr-only">Thème choisi: </span><span class="selected-difficulty">{{ quizTheme }}</span></p>
     </div>
   </div>
@@ -26,7 +26,7 @@
   <h2>Choisir un niveau de difficulté</h2>
 
   <div class="row">
-    <div class="col-sm-12 text-center">
+    <div class="col-md-12 text-center">
       <div class="btn-group btn-group-toggle" ngbRadioGroup name="radioBasic" [(ngModel)]="difficulty">
         <label ngbButtonLabel class="btn-secondary">
           <input ngbButton type="radio" value="1"> Facile
@@ -39,10 +39,10 @@
         </label>
       </div>
     </div>
-    <div class="col-sm-12 text-center">
+    <div class="col-md-12 text-center">
       <p><span class="sr-only">Niveau de difficulté choisi: </span><span class="selected-difficulty">{{ displayDifficulty() }}</span></p>
     </div>
-    <div class="col-sm-12 text-center">
+    <div class="col-md-12 text-center">
       <button type="button" class="btn btn-primary m-1" (click)="onStartQuiz(quizId, difficulty)">Lancer</button>
       <button type="button" class="btn btn-primary m-1" (click)="onCancel()">Annuler</button>
     </div>
@@ -55,7 +55,7 @@
   <h2>{{ quizTheme }}</h2>
 
   <div class="row">
-    <div class="col-sm-12 text-center">
+    <div class="col-md-12 text-center">
       <app-timer #timer [toggle]="isTimerRunning"></app-timer>
     </div>
   </div>
@@ -63,7 +63,7 @@
   <div *ngFor="let question of questions | keyvalue">
     <div *ngIf="questions[currentQuestionIndex].id === question.value.id">
       <div class="row justify-content-center">
-        <div class="col-sm-6 mb-3">
+        <div class="col-md-6 mb-3">
           <div class="card text-center">
             <div class="card-header">
               <h3>Question {{ toQuestionNumber(question.key) }} de {{ questions.length }}</h3>
@@ -91,7 +91,7 @@
         </div>
       </div>
       <div class="row" *ngIf="this.selectedAnswer">
-        <div class="col-sm-12 text-center">
+        <div class="col-md-12 text-center">
           <button type="button" class="btn btn-primary m-1"
           *ngIf="toQuestionNumber(question.key) !== questions.length"
           (click)="onNextQuestion()">Passer à la prochaine question</button>
@@ -111,7 +111,7 @@
   <h2>{{ quizTheme }}</h2>
   
   <div class="row justify-content-center">
-    <div class="col-sm-6 mb-3">
+    <div class="col-md-6 mb-3">
       <div class="card text-center">
         <div class="card-header">
           <h3>Résultats de la partie</h3>
@@ -131,7 +131,7 @@
     </div>
   </div>
   <div class="row">
-    <div class="col-sm-12 text-center">
+    <div class="col-md-12 text-center">
       <button type="button" class="btn btn-primary m-1"
       (click)="onResetQuizList()">Choisir un autre quiz</button>
       <button type="button" class="btn btn-primary m-1"
@@ -176,7 +176,7 @@
     </div>
   </div>
   <div class="row">
-    <div class="col-sm-12 text-center">
+    <div class="col-md-12 text-center">
       <button type="button" class="btn btn-primary m-1"
       (click)="onSendChallenge()">Lancer le défi</button>
       <button type="button" class="btn btn-primary m-1"

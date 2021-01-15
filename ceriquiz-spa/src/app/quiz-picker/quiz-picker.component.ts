@@ -53,8 +53,6 @@ export class QuizPickerComponent implements OnInit, OnDestroy {
       this.players = players.filter(value => value.id !== currentUserId);
     });
 
-    console.log('BEFORE: ' + localStorage.getItem('challenge'));
-    console.log(localStorage.getItem('challenge'));
     if (localStorage.getItem('challenge')) {
       this.challenge = JSON.parse(localStorage.getItem('challenge')) as Challenge;
 
@@ -77,33 +75,19 @@ export class QuizPickerComponent implements OnInit, OnDestroy {
     else {
       this.onResetQuizList();
     }
-    console.log('AFTER: ' + localStorage.getItem('challenge'));
-  }
-  
-  private saveChallengeResults() {
-    const session: LoginResponse = JSON.parse(localStorage.getItem('session'));
-
-    if (session) {
-      const currentUserId = session.id;
-
-      let opponentUserId;
-      if (currentUserId == this.challenge.challengerUserId) {
-        opponentUserId = this.challenge.challengeeUserId;
-      }
-      else {
-        opponentUserId = this.challenge.challengerUserId;
-      }
-  
-      this.profileService.winChallenge(this.challenge.id, opponentUserId, currentUserId);
-  
-      this.challenge = undefined;
-    }
   }
 
   ngOnDestroy(): void {
     if (this.challenge && !this.isQuizFinished) {
       console.log('The challenge has been abandoned!');
-      this.saveChallengeResults();
+      
+      const session: LoginResponse = JSON.parse(localStorage.getItem('session'));
+
+      if (session) {
+        const currentUserId = session.id;
+        this.profileService.loseChallenge(this.challenge, currentUserId);
+        this.challenge = undefined;
+      }
     }
   }
 
@@ -295,19 +279,21 @@ export class QuizPickerComponent implements OnInit, OnDestroy {
     const score = this.calculateScore(timer);
     this.profileService.saveScore(score).subscribe();
 
-    if (this.challenge && this.challenge.targetScore < score.score) {
-      const currentUserId = (JSON.parse(localStorage.getItem('session')) as LoginResponse).id;
-      let opponentUserId;
-      if (currentUserId == this.challenge.challengerUserId) {
-        opponentUserId = this.challenge.challengeeUserId;
-      }
-      else {
-        opponentUserId = this.challenge.challengerUserId;
-      }
+    if (this.challenge) {
+      const session: LoginResponse = JSON.parse(localStorage.getItem('session'));
 
-      this.profileService.winChallenge(this.challenge.id, currentUserId, opponentUserId);
+      if (session) {
+        const currentUserId = session.id;
 
-      this.challenge = undefined;
+        if (this.challenge.targetScore < score.score) {
+          this.profileService.winChallenge(this.challenge, currentUserId);
+        }
+        else {
+          this.profileService.loseChallenge(this.challenge, currentUserId);
+        }
+
+        this.challenge = undefined;
+      }
     }
 
     // Remettre le chronomètre à zéro au cas où l'utilisateur décide de jouer

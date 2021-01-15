@@ -256,13 +256,43 @@ export class ProfileService {
     return this.getChallengesObservable();
   }
 
+  private getOpponentId(challenge: Challenge, userId: number): number {
+    if (userId == challenge.challengerUserId) {
+      return challenge.challengeeUserId;
+    }
+    else {
+      return challenge.challengerUserId;
+    }
+  }
+
   /**
    * Gagner un défi.
    *
-   * @param challengeId: Id du défi.
+   * @param challenge: Défi.
+   * @param winnerUserId: Id de l'utilisateur gagnant.
    */
-  public winChallenge(challengeId: string, winnerUserId: number, loserUserId: number): void {
-    this.socket.emit('playerWonChallenge', { 'winnerUserId': winnerUserId, 'loserUserId': loserUserId });
+  public winChallenge(challenge: Challenge, winnerUserId: number): void {
+    this.socket.emit(
+      'playerWonChallenge', { 
+        'winnerUserId': winnerUserId, 
+        'loserUserId': this.getOpponentId(challenge, winnerUserId) 
+      }
+    );
+  }
+
+  /**
+   * Perdre un défi.
+   *
+   * @param challenge: Défi.
+   * @param loserUserId: Id de l'utilisateur perdant.
+   */
+  public loseChallenge(challenge: Challenge, loserUserId: number): void {
+    this.socket.emit(
+      'playerWonChallenge', { 
+        'winnerUserId': this.getOpponentId(challenge, loserUserId), 
+        'loserUserId': loserUserId
+      }
+    );
   }
   
   /**
